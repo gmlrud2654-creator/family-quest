@@ -3701,9 +3701,9 @@ function askChildPin(child, rewardId) {
     $('modalRoot').innerHTML =
       '<div class="modal-backdrop"><div class="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="childPinTitle">' +
         '<h2 id="childPinTitle" style="justify-content:center">🔐 ' + who + ' 비밀번호 확인</h2>' +
-        '<div class="modal-sub">' + who + '가 상점에서 교환하려면 비밀번호가 필요해요</div>' +
+        '<div class="modal-sub">상점에서 교환할 때 넣는 숫자 4자리예요</div>' +
         '<div class="pin-field"><label>' + who + ' 비밀번호 4자리</label>' +
-          '<input id="childPinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="' + who + ' 비밀번호 4자리">' +
+          '<input id="childPinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="숫자 4자리" aria-label="' + who + ' 비밀번호 4자리">' +
         '</div>' +
         '<p class="pin-msg" id="childPinMsg">숫자 4자리를 넣고 확인을 눌러 주세요</p>' +
         '<div class="modal-actions">' +
