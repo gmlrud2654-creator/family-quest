@@ -110,6 +110,10 @@ select{
 .status.busy::before{background:#d8b979; animation:pulse 1.2s infinite}
 .status.err{background:#fbe4ea; color:#a5475f}
 .status.err::before{background:#dd7d90}
+.account-email{
+  font-size:10.5px; font-weight:700; color:#b3a894; max-width:180px; padding:0 2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums;
+}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 .board{display:grid; grid-template-columns:1.03fr 1fr 1fr .97fr; gap:12px; align-items:start}
@@ -685,6 +689,7 @@ body.admin-locked .manual{padding-right:8px}
     </div>
     <div class="top-actions">
       <span class="status" id="syncStatus">연결 확인 중</span>
+      <span class="account-email hidden" id="accountEmail"></span>
       <button class="pill-btn chat" id="chatBtn" aria-label="가족 채팅방 열기"><span aria-hidden="true">💬</span> 가족 채팅<span class="chat-badge hidden" id="chatBadge">0</span></button>
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
@@ -2234,6 +2239,13 @@ onAuthStateChanged(auth, user => {
   uid = user ? user.uid : null;
   chatSeenReady = false;
   chatLastTs = 0;
+  const emailEl = $('accountEmail');
+  if (emailEl) {
+    const mail = user && user.email ? user.email : '';
+    emailEl.textContent = mail;
+    emailEl.classList.toggle('hidden', !mail);
+    emailEl.title = mail ? '로그인한 계정: ' + mail : '';
+  }
   $('loginView').classList.toggle('hidden', !!user);
   $('appView').classList.toggle('hidden', !user);
   if (!user) {
