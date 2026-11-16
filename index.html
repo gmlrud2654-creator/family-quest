@@ -95,7 +95,7 @@ select{
   background:linear-gradient(135deg,#ffe3ea,#dfeee0); box-shadow:inset 0 0 0 1px #fff8, 0 4px 12px rgba(200,160,170,.18);
 }
 .brand h1{font-size:19px; font-weight:900; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.brand-meta{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums}
+.brand-meta{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums; flex-wrap:nowrap; white-space:nowrap; overflow:hidden}
 .brand-meta b{color:var(--ink2); font-weight:700}
 .top-actions{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0}
 .pill-btn{
@@ -220,7 +220,7 @@ select{
 .prep-line input:checked + span{text-decoration:line-through; color:#b3aa9c}
 .add-event{margin-top:8px; display:flex; flex-direction:column; gap:5px}
 .add-event input,.add-event select{font-size:12.5px; padding:7px 9px; border-radius:9px}
-.add-event .row2{display:flex; gap:5px; flex-wrap:wrap}
+.add-event .row2{display:flex; gap:5px}
 .add-event .row2>*{flex:1 1 0; min-width:0}
 .add-event .btn{padding:8px; font-size:12.5px; margin-top:1px}
 
@@ -326,7 +326,7 @@ select{
 
 /* ---------------- wishlist ---------------- */
 .wish-add{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
-.wish-add .line{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.wish-add .line{display:flex; gap:5px; min-width:0}
 .wish-add .line>*{min-width:0}
 .wish-add input{font-size:12.5px; padding:8px 10px; border-radius:10px}
 .wish-add select{width:78px; flex:0 0 auto; font-size:12px; padding:8px 20px 8px 8px; border-radius:10px}
@@ -395,7 +395,7 @@ select{
 }
 .reward-del:hover{background:#fdeef0}
 .reward-add{display:flex; flex-direction:column; gap:5px; margin-top:8px; padding-top:8px; border-top:1px dashed #f0e4cf}
-.reward-add .line{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.reward-add .line{display:flex; gap:5px; min-width:0}
 .reward-add .line>*{min-width:0}
 .reward-add input{font-size:12px; padding:7px 9px; border-radius:9px; background:#fffdf9}
 .reward-add #rewardEmoji{width:48px; flex:0 0 auto; text-align:center; font-size:15px; padding:6px 4px}
@@ -683,7 +683,7 @@ body.admin-locked .notice-empty{display:none!important}
 /* ---------------- 엄마·아빠 보너스 포인트 ---------------- */
 .manual-card{background:linear-gradient(180deg,#fffaf3,rgba(255,253,248,.95))}
 .manual-form{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
-.manual-form .manual-row{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.manual-form .manual-row{display:flex; gap:5px; min-width:0}
 .manual-form .manual-row>*{min-width:0}
 .manual-form select{flex:1; font-size:12.5px; padding:8px 22px 8px 9px; border-radius:10px; background:#fffdf9}
 .manual-form input{font-size:12.5px; padding:8px 10px; border-radius:10px; background:#fffdf9}
@@ -771,6 +771,8 @@ body.admin-locked .manual{padding-right:8px}
 
 /* ---- iPad 가로(900–1280px): 4열 그대로 + 상단바 컴팩트 ---- */
 @media (min-width:900px) and (max-width:1280px){
+  .brand{flex:1 1 100%; min-width:0}
+  .top-actions{width:100%}
   .board{gap:10px}
   .col{gap:10px}
   .topbar{gap:7px 10px; padding:7px 2px 10px}
