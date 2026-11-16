@@ -1836,8 +1836,8 @@ function openNoticeHistory() {
       '<div class="modal-sub">가족 공지를 지난 것까지 모아 두었어요' + (items.length ? ' · ' + items.length + '개' : '') + '</div>' +
       '<div class="nh-list">' + rows + '</div>' +
       '<div class="modal-actions">' +
-        (isAdminUnlocked ? '<button class="btn primary" data-hist-write>✏️ 새 공지 쓰기</button>' : '') +
-        '<button class="btn" data-hist-close>닫기</button>' +
+        (isAdminUnlocked ? '<button class="btn primary" data-hist-write="1">✏️ 새 공지 쓰기</button>' : '') +
+        '<button class="btn" data-hist-close="1">닫기</button>' +
       '</div>' +
     '</div></div>';
   const backdrop = root.querySelector('.modal-backdrop');
@@ -3118,8 +3118,8 @@ document.addEventListener('click', async e => {
   if (t.id === 'noticeHistoryBtn') { openNoticeHistory(); return; }
   if (t.dataset.histDel) { deleteNoticeHistoryItem(t.dataset.histDel); return; }
   if (t.dataset.histShow) { showNoticeBannerAgain(); return; }
-  if (t.dataset.histWrite) { closeModal(); openNoticeEditor(); return; }
-  if (t.dataset.histClose) { closeModal(); return; }
+  if (t.dataset.histWrite !== undefined) { closeModal(); openNoticeEditor(); return; }
+  if (t.dataset.histClose !== undefined) { closeModal(); return; }
   if (t.id === 'screensaverBtn') { openScreensaver(); return; }
   if (t.id === 'adminBtn') {
     if (isAdminUnlocked) { isAdminUnlocked = false; renderAdmin(); toast('🔒 설정을 잠갔어요', 'good'); }
