@@ -345,6 +345,7 @@ select{
 .wish-main b{display:block; font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .wish.bought .wish-main b{text-decoration:line-through; color:#b1a89b}
 .wish-main span{font-size:10.5px; color:var(--muted); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.wish-date{font-size:9.5px; font-weight:800; color:#b6a894; flex:0 0 auto; font-variant-numeric:tabular-nums}
 .wish-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto}
 .wish-who.나연{background:var(--pink-soft); color:#a8617a}
 .wish-who.가빈{background:var(--mint-soft); color:#4a7856}
@@ -1332,7 +1333,9 @@ function normalize() {
   }));
   data.wishlist = data.wishlist.filter(w => w && w.id && w.name).map(w => ({
     id: String(w.id), name: String(w.name), memo: w.memo || '', child: CHILDREN.indexOf(w.child) >= 0 ? w.child : 'nayeon',
-    bought: !!w.bought, date: w.date || todayKey()
+    bought: !!w.bought,
+    date: /^\d{4}-\d{2}-\d{2}$/.test(String(w.date || '')) ? String(w.date) : '',
+    createdAt: Number(w.createdAt) || 0
   }));
   data.redemptions = data.redemptions.filter(r => r && r.cost !== undefined).map(r => ({
     id: String(r.id || newId('r')), child: CHILDREN.indexOf(r.child) >= 0 ? r.child : 'nayeon',
@@ -1543,16 +1546,26 @@ function renderShop() {
     : '<p class="empty" style="padding:6px">아직 교환 기록이 없어요</p>';
 }
 
+function wishWhen(w) {
+  const d = String((w && w.date) || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d.slice(5).replace('-', '/');
+  if (w && Number(w.createdAt) > 0) return shortStamp(w.createdAt).split(' ')[0];
+  return '';
+}
 function renderWishlist() {
   $('wishCount').textContent = data.wishlist.filter(w => !w.bought).length + '개';
   const items = data.wishlist.slice().sort((a, b) => (a.bought ? 1 : 0) - (b.bought ? 1 : 0));
   $('wishList').innerHTML = items.length
-    ? items.map(w => '<div class="wish' + (w.bought ? ' bought' : '') + '">' +
+    ? items.map(w => {
+        const when = wishWhen(w);
+        return '<div class="wish' + (w.bought ? ' bought' : '') + '">' +
         '<input type="checkbox" data-wish-toggle="' + esc(w.id) + '"' + (w.bought ? ' checked' : '') + ' aria-label="' + esc(w.name) + ' 구매 완료">' +
         '<span class="wish-who ' + CHILD[w.child].name + '">' + CHILD[w.child].emoji + ' ' + CHILD[w.child].name + '</span>' +
         '<span class="wish-main"><b>' + esc(w.name) + '</b>' + (w.memo ? '<span>' + esc(w.memo) + '</span>' : '') + '</span>' +
+        (when ? '<span class="wish-date">' + esc(when) + '</span>' : '') +
         '<button class="icon-btn" data-wish-del="' + esc(w.id) + '" aria-label="삭제">✕</button>' +
-      '</div>').join('')
+      '</div>';
+      }).join('')
     : '<p class="empty">갖고 싶은 걸 적어 보세요 💕</p>';
 }
 
