@@ -185,6 +185,18 @@ select{
 .day.selected{background:var(--lav-soft); color:#5a4b86; font-weight:900; box-shadow:inset 0 0 0 1.5px #cdc1ec}
 .day.selected.today{color:#5a4b86}
 .day.selected.today::after{display:none}
+.day .dnum{line-height:1}
+.day.sun .dnum{color:#d69aa6; font-weight:700}
+.day.holiday .dnum{color:#d9738c; font-weight:900}
+.day.selected .dnum{color:inherit}
+.day-holiday{display:inline-flex; align-items:center; gap:4px; margin:0 0 7px; padding:4px 9px; border-radius:9px; background:#fdf0f3; border:1px solid #f8dde5; color:#b95f7c; font-size:11px; font-weight:800}
+.date-range{display:flex; align-items:center; gap:4px}
+.date-range input{flex:1 1 0; min-width:0}
+.date-range .tilde{font-size:11px; color:var(--muted); flex:0 0 auto}
+.range-cap{font-size:10px; font-weight:700; color:var(--muted)}
+.range-cap span{font-weight:600; color:#b9b0a1}
+.cal-hint{margin-top:6px; font-size:10px; color:#b3aa9c; text-align:right}
+.cal-hint b{color:#c9738a; font-weight:800}
 .dots{display:flex; gap:2px; height:5px; align-items:center}
 .dots i{width:4.5px; height:4.5px; border-radius:99px}
 .dots i.more{width:auto; height:auto; background:none!important; font-size:8px; color:#b3aa9c; line-height:1}
@@ -222,6 +234,7 @@ select{
 .add-event input,.add-event select{font-size:12.5px; padding:7px 9px; border-radius:9px}
 .add-event .row2{display:flex; gap:5px}
 .add-event .row2>*{flex:1 1 0; min-width:0}
+.add-event .date-range input{font-size:12px}
 .add-event .btn{padding:8px; font-size:12.5px; margin-top:1px}
 
 .dday-list{display:flex; flex-direction:column; gap:6px}
@@ -912,21 +925,28 @@ body.admin-locked .manual{padding-right:8px}
           <span><i class="dot-n"></i>나연</span><span><i class="dot-g"></i>가빈</span>
           <span><i class="dot-f"></i>가족</span><span><i class="dot-m"></i>엄마</span><span><i class="dot-d"></i>아빠</span>
         </div>
+        <div class="cal-hint">빨간 날짜는 <b>공휴일</b>이에요 🎉</div>
         <div class="day-panel hidden" id="dayPanel">
           <div class="day-panel-head">
             <b id="dayPanelTitle">오늘</b>
             <button class="icon-btn" id="closeDayPanel" aria-label="닫기">✕</button>
           </div>
+          <div id="dayHoliday" class="day-holiday hidden"></div>
           <div id="selectedEvents"></div>
           <div class="add-event">
             <input id="eventTitle" placeholder="일정 이름 (예: 피아노 콩쿠르)">
+            <div class="range-cap">시작일 ~ 종료일 <span>(종료일은 비워도 돼요)</span></div>
+            <div class="date-range">
+              <input id="eventDate" type="date" aria-label="시작일">
+              <span class="tilde">~</span>
+              <input id="eventEndDate" type="date" aria-label="종료일 (선택)">
+            </div>
             <div class="row2">
-              <input id="eventDate" type="date">
               <select id="eventWho">
                 <option>가족</option><option>나연</option><option>가빈</option><option>엄마</option><option>아빠</option>
               </select>
+              <input id="eventMemo" placeholder="장소·메모">
             </div>
-            <input id="eventMemo" placeholder="장소·메모">
             <input id="prepText" placeholder="준비물 (쉼표로 구분)">
             <button class="btn primary sm" id="addEventBtn">일정 저장</button>
           </div>
@@ -1266,6 +1286,103 @@ const CHAT_PEOPLE = [
 const CHAT_MAX = 100;
 
 /* ============================================================
+   🇰🇷 한국 공휴일 (2025~2028)
+   - 「관공서의 공휴일에 관한 규정」 기준, 설날·추석·부처님오신날은 음력 양력 환산
+   - 2026년부터 노동절(5/1)·제헌절(7/17)이 공휴일
+   - 임시공휴일과 임기만료 선거일 포함 · 정부가 새로 지정하면 이 표에 추가하면 됩니다
+   ============================================================ */
+const KR_HOLIDAYS = {
+  /* 2025 */
+  '2025-01-01': '신정',
+  '2025-01-27': '임시공휴일(설날)',
+  '2025-01-28': '설날 연휴',
+  '2025-01-29': '설날',
+  '2025-01-30': '설날 연휴',
+  '2025-03-01': '삼일절',
+  '2025-03-03': '대체공휴일(삼일절)',
+  '2025-05-05': '어린이날·부처님오신날',
+  '2025-05-06': '대체공휴일(부처님오신날)',
+  '2025-06-03': '대통령선거일',
+  '2025-06-06': '현충일',
+  '2025-08-15': '광복절',
+  '2025-10-03': '개천절',
+  '2025-10-05': '추석 연휴',
+  '2025-10-06': '추석',
+  '2025-10-07': '추석 연휴',
+  '2025-10-08': '대체공휴일(추석)',
+  '2025-10-09': '한글날',
+  '2025-12-25': '크리스마스',
+  /* 2026 */
+  '2026-01-01': '신정',
+  '2026-02-16': '설날 연휴',
+  '2026-02-17': '설날',
+  '2026-02-18': '설날 연휴',
+  '2026-03-01': '삼일절',
+  '2026-03-02': '대체공휴일(삼일절)',
+  '2026-05-01': '노동절',
+  '2026-05-05': '어린이날',
+  '2026-05-24': '부처님오신날',
+  '2026-05-25': '대체공휴일(부처님오신날)',
+  '2026-06-03': '전국동시지방선거일',
+  '2026-06-06': '현충일',
+  '2026-07-17': '제헌절',
+  '2026-08-15': '광복절',
+  '2026-08-17': '대체공휴일(광복절)',
+  '2026-09-24': '추석 연휴',
+  '2026-09-25': '추석',
+  '2026-09-26': '추석 연휴',
+  '2026-10-03': '개천절',
+  '2026-10-05': '대체공휴일(개천절)',
+  '2026-10-09': '한글날',
+  '2026-12-25': '크리스마스',
+  /* 2027 */
+  '2027-01-01': '신정',
+  '2027-02-06': '설날 연휴',
+  '2027-02-07': '설날',
+  '2027-02-08': '설날 연휴',
+  '2027-02-09': '대체공휴일(설날)',
+  '2027-03-01': '삼일절',
+  '2027-05-01': '노동절',
+  '2027-05-03': '대체공휴일(노동절)',
+  '2027-05-05': '어린이날',
+  '2027-05-13': '부처님오신날',
+  '2027-06-06': '현충일',
+  '2027-07-17': '제헌절',
+  '2027-07-19': '대체공휴일(제헌절)',
+  '2027-08-15': '광복절',
+  '2027-08-16': '대체공휴일(광복절)',
+  '2027-09-14': '추석 연휴',
+  '2027-09-15': '추석',
+  '2027-09-16': '추석 연휴',
+  '2027-10-03': '개천절',
+  '2027-10-04': '대체공휴일(개천절)',
+  '2027-10-09': '한글날',
+  '2027-10-11': '대체공휴일(한글날)',
+  '2027-12-25': '크리스마스',
+  '2027-12-27': '대체공휴일(크리스마스)',
+  /* 2028 (2028년 월력요항 발표 전 잠정치 · 10/5 대체공휴일은 바뀔 수 있어요) */
+  '2028-01-01': '신정',
+  '2028-01-26': '설날 연휴',
+  '2028-01-27': '설날',
+  '2028-01-28': '설날 연휴',
+  '2028-03-01': '삼일절',
+  '2028-04-12': '국회의원선거일',
+  '2028-05-01': '노동절',
+  '2028-05-02': '부처님오신날',
+  '2028-05-05': '어린이날',
+  '2028-06-06': '현충일',
+  '2028-07-17': '제헌절',
+  '2028-08-15': '광복절',
+  '2028-10-02': '추석 연휴',
+  '2028-10-03': '추석·개천절',
+  '2028-10-04': '추석 연휴',
+  '2028-10-05': '대체공휴일(추석)',
+  '2028-10-09': '한글날',
+  '2028-12-25': '크리스마스'
+};
+function holidayName(key) { return KR_HOLIDAYS[key] || ''; }
+
+/* ============================================================
    상태 & 도우미
    ============================================================ */
 const $ = (id) => document.getElementById(id);
@@ -1317,6 +1434,33 @@ function dateShort(key) {
   const p = key.split('-').map(Number);
   const d = new Date(p[0], p[1] - 1, p[2]);
   return p[1] + '월 ' + p[2] + '일 (' + WEEK[d.getDay()] + ')';
+}
+function dateTick(key) {
+  const p = String(key || '').split('-').map(Number);
+  if (p.length < 3 || !p[0]) return String(key || '');
+  const d = new Date(p[0], p[1] - 1, p[2]);
+  return p[1] + '/' + pad(p[2]) + ' (' + WEEK[d.getDay()] + ')';
+}
+/* 일정 종료일: 비었거나 시작일과 같거나 이전이면 하루 일정 */
+function eventEnd(e) {
+  const start = String((e && e.date) || '');
+  const end = String((e && e.endDate) || '');
+  return (validDateKey(end) && end > start) ? end : start;
+}
+function isMultiDay(e) { return eventEnd(e) !== String((e && e.date) || ''); }
+function eventRange(e) {
+  const end = eventEnd(e);
+  return end === String(e.date) ? dateTick(e.date) : dateTick(e.date) + ' ~ ' + dateTick(end);
+}
+/* 오늘 기준 일정 상태: 진행 중 / 오늘 / D-n / D+n */
+function eventStatus(e) {
+  const today = todayKey();
+  const start = daysBetween(today, String(e.date));
+  const end = daysBetween(today, eventEnd(e));
+  if (start > 0) return 'D-' + start;
+  if (start === 0) return '오늘';
+  if (end >= 0) return '진행 중';
+  return 'D+' + Math.abs(start);
 }
 function fullDate(key) {
   const p = key.split('-').map(Number);
@@ -1416,10 +1560,16 @@ function normalize() {
         .slice(-50) : [];
     });
   });
-  data.events = data.events.filter(e => e && e.id && e.date).map(e => ({
-    id: String(e.id), title: String(e.title || '일정'), date: String(e.date), who: e.who || '가족',
-    memo: e.memo || '', prep: Array.isArray(e.prep) ? e.prep.filter(p => p && p.text).map(p => ({ text: String(p.text), done: !!p.done })) : []
-  }));
+  data.events = data.events.filter(e => e && e.id && e.date).map(e => {
+    const date = String(e.date);
+    const endRaw = validDateKey(String(e.endDate || '')) ? String(e.endDate) : '';
+    return {
+      id: String(e.id), title: String(e.title || '일정'), date: date,
+      endDate: endRaw && endRaw > date ? endRaw : '',
+      who: e.who || '가족',
+      memo: e.memo || '', prep: Array.isArray(e.prep) ? e.prep.filter(p => p && p.text).map(p => ({ text: String(p.text), done: !!p.done })) : []
+    };
+  });
   data.wishlist = data.wishlist.filter(w => w && w.id && w.name).map(w => ({
     id: String(w.id), name: String(w.name), memo: w.memo || '', child: CHILDREN.indexOf(w.child) >= 0 ? w.child : 'nayeon',
     bought: !!w.bought,
@@ -1658,7 +1808,7 @@ function renderWishlist() {
     : '<p class="empty">갖고 싶은 걸 적어 보세요 💕</p>';
 }
 
-function eventsOn(key) { return data.events.filter(e => e.date === key); }
+function eventsOn(key) { return data.events.filter(e => String(e.date) <= key && key <= eventEnd(e)); }
 
 function shortStamp(ts) {
   if (!ts) return '';
@@ -1702,12 +1852,16 @@ function renderCalendar() {
   for (let d = 1; d <= lastDay; d++) {
     const key = y + '-' + pad(m + 1) + '-' + pad(d);
     const evs = eventsOn(key);
+    const hName = holidayName(key);
+    const sun = new Date(y, m, d).getDay() === 0;
     const whos = [];
     evs.forEach(e => { if (whos.indexOf(e.who) < 0) whos.push(e.who); });
     let dots = whos.slice(0, 3).map(w => '<i class="' + whoDot(w) + '"></i>').join('');
     if (whos.length > 3) dots += '<i class="more">+' + (whos.length - 3) + '</i>';
-    html += '<button class="day' + (key === today ? ' today' : '') + (key === selectedDate ? ' selected' : '') + '" data-date="' + key + '">' +
-      '<span>' + d + '</span><span class="dots">' + dots + '</span></button>';
+    const label = hName ? ' aria-label="' + esc(d + '일 ' + hName) + '" title="' + esc(hName) + '"' : '';
+    html += '<button class="day' + (key === today ? ' today' : '') + (key === selectedDate ? ' selected' : '') +
+      (sun ? ' sun' : '') + (hName ? ' holiday' : '') + '" data-date="' + key + '"' + label + '>' +
+      '<span class="dnum">' + d + '</span><span class="dots">' + dots + '</span></button>';
   }
   const tail = (firstDow + lastDay) % 7;
   if (tail) for (let i = 1; i <= 7 - tail; i++) html += '<div class="day out">' + i + '</div>';
@@ -1723,16 +1877,21 @@ function whoDot(who) {
 
 function renderDday() {
   const today = todayKey();
-  const up = data.events.filter(e => daysBetween(today, e.date) >= 0)
-    .sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6);
+  const up = data.events.filter(e => daysBetween(today, eventEnd(e)) >= 0)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || eventEnd(a).localeCompare(eventEnd(b))).slice(0, 6);
   $('ddayList').innerHTML = up.length
     ? up.map(e => {
-        const n = daysBetween(today, e.date);
-        const label = n === 0 ? 'D-day' : 'D-' + n;
-        const cls = n === 0 ? ' today' : (n <= 3 ? ' soon' : '');
+        const startN = daysBetween(today, String(e.date));
+        const endN = daysBetween(today, eventEnd(e));
+        let label, cls;
+        if (startN > 0) { label = 'D-' + startN; cls = startN <= 3 ? ' soon' : ''; }
+        else if (startN === 0) { label = 'D-day'; cls = ' today'; }
+        else if (endN >= 0) { label = '진행 중'; cls = ' today'; }
+        else { label = 'D+' + Math.abs(startN); cls = ''; }
         return '<div class="dday">' +
           '<span class="dday-badge' + cls + '">' + label + '</span>' +
-          '<span class="dday-main"><b>' + esc(e.title) + '</b><span>' + dateShort(e.date) + ' · ' + esc(e.who) + '</span></span>' +
+          '<span class="dday-main"><b>' + esc(e.title) + '</b><span>' + eventRange(e) + ' · ' + esc(e.who) + '</span></span>' +
+          '<button class="icon-btn" data-edit-event="' + esc(e.id) + '" aria-label="일정 수정">✏️</button>' +
           '<button class="icon-btn" data-del-event="' + esc(e.id) + '" aria-label="일정 삭제">✕</button>' +
         '</div>';
       }).join('')
@@ -1943,16 +2102,19 @@ function maybeShowReminders() {
   if (document.querySelector('.modal-backdrop')) { scheduleReminders(4000); return; }
 
   const today = todayKey();
+  const tmrDate = new Date();
+  tmrDate.setDate(tmrDate.getDate() + 1);
+  const tmr = keyOf(tmrDate);
   const ddaySeen = chatStore(ddaySeenKey()) === '1';
   const events = ddaySeen ? [] : (Array.isArray(data.events) ? data.events : [])
     .filter(e => e && e.id && e.title && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')));
-  const todays = events.filter(e => daysBetween(today, e.date) === 0);
-  const tomorrows = events.filter(e => daysBetween(today, e.date) === 1);
+  const todays = events.filter(e => e.date <= today && today <= eventEnd(e));
+  const tomorrows = events.filter(e => e.date <= tmr && tmr <= eventEnd(e));
   if (!todays.length && !tomorrows.length) return;   /* 공지 팝업은 없앴어요 · D-Day만 알림 */
 
   const row = (e) => {
     const w = ddayWho(e.who);
-    const meta = [fullDate(e.date), e.memo ? String(e.memo) : ''].filter(Boolean).join(' · ');
+    const meta = [isMultiDay(e) ? eventRange(e) : fullDate(e.date), e.memo ? String(e.memo) : ''].filter(Boolean).join(' · ');
     return '<div class="dday-pop-row">' +
       '<div class="dp-top"><span class="dday-pop-who">' + esc(w.emoji + ' ' + w.name) + '</span>' +
         '<b>' + esc(e.title) + '</b></div>' +
@@ -1989,17 +2151,24 @@ function maybeShowReminders() {
 
 function renderDayPanel() {
   $('dayPanelTitle').textContent = fullDate(selectedDate);
+  const hName = holidayName(selectedDate);
+  const hEl = $('dayHoliday');
+  if (hEl) {
+    hEl.textContent = hName ? '🎉 ' + hName : '';
+    hEl.classList.toggle('hidden', !hName);
+  }
   const evs = eventsOn(selectedDate);
   $('selectedEvents').innerHTML = evs.length
     ? evs.map(e => {
-        const n = daysBetween(todayKey(), e.date);
-        const dLabel = n === 0 ? '오늘' : (n > 0 ? 'D-' + n : 'D+' + Math.abs(n));
+        const multi = isMultiDay(e);
+        const stat = eventStatus(e);
+        const meta = [multi ? eventRange(e) : '', stat, e.memo ? String(e.memo) : ''].filter(Boolean).join(' · ');
         return '<div class="event who-' + esc(e.who) + '">' +
           '<div class="event-top"><strong>' + esc(e.title) + '</strong>' +
             '<span class="who-tag ' + esc(e.who) + '">' + esc(e.who) + '</span>' +
             '<button class="icon-btn" data-edit-event="' + esc(e.id) + '" aria-label="일정 수정">✏️</button>' +
             '<button class="icon-btn" data-del-event="' + esc(e.id) + '" aria-label="일정 삭제">✕</button></div>' +
-          '<div class="event-meta">' + dLabel + (e.memo ? ' · ' + esc(e.memo) : '') + '</div>' +
+          '<div class="event-meta">' + esc(meta) + '</div>' +
           (e.prep && e.prep.length ? '<div class="prep">' + e.prep.map((p, i) =>
             '<label class="prep-line"><input type="checkbox" data-event="' + esc(e.id) + '" data-prep="' + i + '"' + (p.done ? ' checked' : '') + '><span>' + esc(p.text) + '</span></label>'
           ).join('') + '</div>' : '') +
@@ -2007,6 +2176,7 @@ function renderDayPanel() {
       }).join('')
     : '<p class="empty" style="padding:4px 0 8px">이 날은 일정이 없어요</p>';
   $('eventDate').value = selectedDate;
+  if ($('eventEndDate')) $('eventEndDate').min = selectedDate;
 }
 
 function renderAll() {
@@ -2973,15 +3143,20 @@ async function addEvent() {
   if (!requireAdmin()) return;
   const title = ($('eventTitle').value || '').trim();
   const date = $('eventDate').value || selectedDate;
+  const endRaw = $('eventEndDate') ? $('eventEndDate').value : '';
   if (!title) { toast('일정 이름을 적어 주세요 📅', 'warn'); $('eventTitle').focus(); return; }
+  if (!validDateKey(date)) { toast('시작일을 골라 주세요 📅', 'warn'); return; }
+  if (endRaw && !validDateKey(endRaw)) { toast('종료일을 다시 골라 주세요 📅', 'warn'); return; }
+  const endDate = endRaw && endRaw > date ? endRaw : '';
   const prep = ($('prepText').value || '').split(',').map(s => s.trim()).filter(Boolean).map(text => ({ text: text, done: false }));
   data.events.push({
-    id: newId('e'), title: title, date: date, who: $('eventWho').value,
+    id: newId('e'), title: title, date: date, endDate: endDate, who: $('eventWho').value,
     memo: ($('eventMemo').value || '').trim(), prep: prep
   });
   $('eventTitle').value = '';
   $('eventMemo').value = '';
   $('prepText').value = '';
+  if ($('eventEndDate')) $('eventEndDate').value = '';
   selectedDate = date;
   viewMonth = new Date(date + 'T00:00:00');
   renderCalendar();
@@ -3005,7 +3180,7 @@ function openEventEditor(id) {
       '<h2 id="eventEditHeading">✏️ 일정 수정</h2>' +
       '<div class="modal-sub">엄마·아빠만 고칠 수 있어요</div>' +
       '<div class="edit-field"><label>일정 이름</label><input id="evEditTitle" maxlength="60" value="' + esc(e.title) + '" placeholder="예: 피아노 콩쿠르"></div>' +
-      '<div class="edit-field"><label>날짜</label><input id="evEditDate" type="date" value="' + esc(e.date) + '"></div>' +
+      '<div class="edit-field"><label>기간 (시작일 ~ 종료일)</label><div class="date-range"><input id="evEditDate" type="date" value="' + esc(e.date) + '" aria-label="시작일"><span class="tilde">~</span><input id="evEditEnd" type="date" value="' + esc(isMultiDay(e) ? eventEnd(e) : '') + '" aria-label="종료일 (선택)"></div><div class="range-cap" style="margin-top:3px">종료일을 비우면 하루 일정이에요</div></div>' +
       '<div class="edit-field"><label>누구</label><select id="evEditWho">' + whoOptions + '</select></div>' +
       '<div class="edit-field"><label>장소·메모</label><input id="evEditMemo" maxlength="120" value="' + esc(e.memo || '') + '" placeholder="장소·메모"></div>' +
       '<div class="edit-field"><label>준비물 (쉼표로 구분)</label><input id="evEditPrep" maxlength="200" value="' + esc(prepText) + '" placeholder="예: 물병, 체육복"></div>' +
@@ -3014,11 +3189,19 @@ function openEventEditor(id) {
   const root = $('modalRoot');
   const titleInput = $('evEditTitle');
   if (titleInput) setTimeout(() => { titleInput.focus(); titleInput.setSelectionRange(titleInput.value.length, titleInput.value.length); }, 60);
+  const dateInput = $('evEditDate');
+  const endInput = $('evEditEnd');
+  if (dateInput && endInput) {
+    dateInput.addEventListener('change', () => {
+      if (validDateKey(dateInput.value)) endInput.min = dateInput.value;
+      if (validDateKey(dateInput.value) && endInput.value && endInput.value <= dateInput.value) endInput.value = '';
+    });
+  }
   const cancel = root.querySelector('[data-event-cancel]');
   if (cancel) cancel.addEventListener('click', closeModal);
   const saveBtn = root.querySelector('[data-event-save]');
   if (saveBtn) saveBtn.addEventListener('click', () => saveEventEdit(id));
-  const inputs = ['evEditTitle', 'evEditDate', 'evEditMemo', 'evEditPrep'].map(k => $(k)).filter(Boolean);
+  const inputs = ['evEditTitle', 'evEditDate', 'evEditEnd', 'evEditMemo', 'evEditPrep'].map(k => $(k)).filter(Boolean);
   inputs.forEach(inp => inp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); saveEventEdit(id); } }));
   const backdrop = root.querySelector('.modal-backdrop');
   if (backdrop) backdrop.addEventListener('click', ev => { if (ev.target === backdrop) closeModal(); });
@@ -3030,8 +3213,11 @@ function saveEventEdit(id) {
   if (!e) return;
   const title = ($('evEditTitle').value || '').trim();
   const date = $('evEditDate').value || e.date;
+  const endRaw = $('evEditEnd') ? $('evEditEnd').value : '';
   if (!title) { toast('일정 이름을 적어 주세요 📅', 'warn'); $('evEditTitle').focus(); return; }
-  if (!validDateKey(date)) { toast('날짜를 골라 주세요 📅', 'warn'); return; }
+  if (!validDateKey(date)) { toast('시작일을 골라 주세요 📅', 'warn'); return; }
+  if (endRaw && !validDateKey(endRaw)) { toast('종료일을 다시 골라 주세요 📅', 'warn'); return; }
+  const endDate = endRaw && endRaw > date ? endRaw : '';
   const oldPrep = Array.isArray(e.prep) ? e.prep : [];
   const used = [];
   const prep = ($('evEditPrep').value || '').split(',').map(s => s.trim()).filter(Boolean).map(text => {
@@ -3041,6 +3227,7 @@ function saveEventEdit(id) {
   });
   e.title = title;
   e.date = date;
+  e.endDate = endDate;
   e.who = $('evEditWho').value || e.who;
   e.memo = ($('evEditMemo').value || '').trim();
   e.prep = prep;
@@ -3271,7 +3458,12 @@ document.addEventListener('click', async e => {
   if (t.id === 'changePinBtn') { changePin(); return; }
 });
 
-$('shopChild').addEventListener('change', renderShop);
+if ($('eventDate')) $('eventDate').addEventListener('change', () => {
+  const start = $('eventDate').value;
+  if (!$('eventEndDate')) return;
+  if (validDateKey(start)) $('eventEndDate').min = start;
+  if (start && $('eventEndDate').value && $('eventEndDate').value <= start) $('eventEndDate').value = '';
+});
 if ($('manualSign')) $('manualSign').addEventListener('change', syncManualSignUI);
 syncManualSignUI();
 $('screensaver').addEventListener('click', closeScreensaver);
