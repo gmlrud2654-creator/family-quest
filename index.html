@@ -1343,11 +1343,11 @@ function normalize() {
     .sort((a, b) => a.createdAt - b.createdAt)
     .slice(-CHAT_MAX) : [];
   data.manualPoints = Array.isArray(data.manualPoints) ? data.manualPoints
-    .filter(p => p && p.id && Number(p.points) > 0)
+    .filter(p => p && p.id && Number.isFinite(Number(p.points)) && Number(p.points) !== 0)
     .map(p => ({
       id: String(p.id),
       child: CHILDREN.indexOf(p.child) >= 0 ? p.child : 'nayeon',
-      name: String(p.name || '보너스 포인트').slice(0, 60),
+      name: String(p.name || (Number(p.points) < 0 ? '벌점' : '보너스 포인트')).slice(0, 60),
       points: Math.round(Number(p.points)),
       createdAt: Number(p.createdAt) || 0
     }))
