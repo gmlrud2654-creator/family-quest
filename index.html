@@ -597,6 +597,65 @@ body.chat-open{overflow:hidden}
 .chat-send:active{transform:scale(.96)}
 .chat-send:disabled{opacity:.5; box-shadow:none; cursor:not-allowed}
 
+/* ---------------- 🔔 채팅 알림 ---------------- */
+.pill-btn.notify{background:#fffdf8; color:#a2947f; border-color:#ecdfcd}
+.pill-btn.notify.on{background:linear-gradient(135deg,#fff4da,#ffe7c0); border-color:#f0dcb4; color:#8a6520; box-shadow:0 2px 8px rgba(220,180,110,.18)}
+.chat-notify-btn{
+  margin-left:auto; font-family:inherit; font-size:10.5px; font-weight:900; line-height:1;
+  padding:6px 10px; border-radius:99px; border:1px solid #ecdfcd; background:#fffdf8; color:#a2947f;
+  cursor:pointer; white-space:nowrap; transition:.18s;
+}
+.chat-notify-btn:hover{background:#fff7ea; border-color:#e6d3b8}
+.chat-notify-btn.on{background:linear-gradient(135deg,#fff4da,#ffe7c0); border-color:#f0dcb4; color:#8a6520}
+.chat-head .chat-close{margin-left:0}
+
+/* ---------------- 📢 가족 공지 ---------------- */
+.notice-banner{
+  display:flex; align-items:flex-start; gap:10px; margin:0 0 14px; padding:12px 14px; border-radius:18px;
+  background:linear-gradient(135deg,#fff6e4,#ffeef2 55%,#fff4e6); border:1px solid #f4e2c6;
+  box-shadow:0 6px 18px rgba(214,178,120,.14); animation:noticeIn .3s ease;
+}
+@keyframes noticeIn{from{opacity:0; transform:translateY(-6px)}to{opacity:1; transform:none}}
+.nb-mark{font-size:20px; line-height:1.25}
+.nb-body{flex:1 1 auto; min-width:0}
+.nb-head{display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+.nb-head b{font-size:10.5px; font-weight:900; letter-spacing:.06em; color:#a8792f}
+.nb-time{font-size:9.5px; color:#b6a894; font-variant-numeric:tabular-nums}
+.nb-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; margin-top:3px; white-space:pre-wrap; word-break:keep-all}
+.nb-tools{display:flex; gap:5px; flex:0 0 auto}
+body.admin-locked .nb-tools{display:none!important}
+.notice-empty{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 14px; padding:9px 12px;
+  border-radius:16px; border:1px dashed #ecdcc4; background:#fffdf8; font-size:11.5px; color:#b0a695;
+}
+body.admin-locked .notice-empty{display:none!important}
+.notice-input{
+  width:100%; margin-top:10px; font-family:inherit; font-size:13px; line-height:1.6; padding:10px 12px;
+  border-radius:14px; border:1px solid #ecdfcd; background:#fffdf9; color:var(--ink); resize:vertical; min-height:96px;
+}
+.notice-input:focus{outline:2px solid #f3ddb6; outline-offset:1px; border-color:#eed9b6}
+.notice-pop{
+  display:flex; align-items:flex-start; gap:9px; margin-top:12px; padding:12px 13px; border-radius:16px;
+  background:linear-gradient(135deg,#fff6e4,#ffeef2); border:1px solid #f4e2c6;
+}
+.notice-pop .np-mark{font-size:18px; line-height:1.3}
+.notice-pop .np-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; white-space:pre-wrap; word-break:keep-all; margin:0}
+.notice-pop .np-time{display:block; font-size:9.5px; font-weight:700; color:#b6a894; margin-top:5px}
+
+/* ---------------- D-Day 팝업 ---------------- */
+.dday-pop{max-width:424px; text-align:left}
+.dday-pop h2{font-size:17px; letter-spacing:-.01em}
+.dday-pop .modal-sub{margin-top:4px}
+.dday-pop-sec{font-size:10.5px; font-weight:900; color:var(--muted); letter-spacing:.05em; margin:15px 0 6px}
+.dday-pop-list{display:flex; flex-direction:column; gap:7px}
+.dday-pop-row{background:linear-gradient(180deg,#fffdf8,#fdf7ee); border:1px solid #f1e6d5; border-radius:14px; padding:10px 12px}
+.dday-pop-row .dp-top{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.dday-pop-who{font-size:9.5px; font-weight:900; color:#8a7a63; background:#f6efe4; border-radius:99px; padding:3px 8px; white-space:nowrap}
+.dday-pop-row b{font-size:13.5px; font-weight:900; color:var(--ink); word-break:keep-all}
+.dday-pop-meta{display:block; font-size:10.5px; color:var(--muted); margin-top:4px; line-height:1.5}
+.dday-pop .modal-actions{justify-content:center; margin-top:18px}
+.dday-pop .modal-actions .btn{min-width:130px}
+
 /* ---------------- 엄마·아빠 보너스 포인트 ---------------- */
 .manual-card{background:linear-gradient(180deg,#fffaf3,rgba(255,253,248,.95))}
 .manual-form{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
@@ -743,6 +802,7 @@ body.admin-locked .manual{padding-right:8px}
       <span class="status" id="syncStatus">연결 확인 중</span>
       <span class="account-email hidden" id="accountEmail"></span>
       <button class="pill-btn chat" id="chatBtn" aria-label="가족 채팅방 열기"><span aria-hidden="true">💬</span> 가족 채팅<span class="chat-badge hidden" id="chatBadge">0</span></button>
+      <button class="pill-btn notify" id="notifyBtn" aria-pressed="false" aria-label="가족 채팅 알림 켜기" title="새 채팅 메시지를 알림음과 상태표시줄 알림으로 받아요">🔔 알림 꺼짐</button>
       <button class="pill-btn" id="ledgerBtn">📊 적립 내역</button>
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
@@ -751,6 +811,23 @@ body.admin-locked .manual{padding-right:8px}
       <button class="pill-btn ghost" id="logoutBtn">로그아웃</button>
     </div>
   </header>
+
+  <!-- ---------- 📢 가족 공지 ---------- -->
+  <section class="notice-banner hidden" id="noticeBanner" aria-live="polite">
+    <span class="nb-mark" aria-hidden="true">📢</span>
+    <div class="nb-body">
+      <div class="nb-head"><b>가족 공지</b><span class="nb-time" id="noticeTime"></span></div>
+      <p class="nb-text" id="noticeText"></p>
+    </div>
+    <div class="nb-tools">
+      <button class="mini" id="noticeEditBtn">✏️ 수정</button>
+      <button class="mini" id="noticeDeleteBtn">🗑 지우기</button>
+    </div>
+  </section>
+  <section class="notice-empty hidden" id="noticeEmpty">
+    <span>📢 오늘의 가족 공지를 남겨 볼까요?</span>
+    <button class="mini" id="noticeWriteBtn">✏️ 공지 쓰기</button>
+  </section>
 
   <div class="board">
     <!-- ---------- 1열 : 달력 + D-Day ---------- -->
@@ -1045,6 +1122,7 @@ body.admin-locked .manual{padding-right:8px}
         <h2 id="chatTitle">가족 채팅방</h2>
         <p class="chat-sub">나연이 가빈이네 · 우리 가족 이야기</p>
       </div>
+      <button class="chat-notify-btn" id="chatNotifyBtn" aria-pressed="false" aria-label="가족 채팅 알림 켜기">🔔 알림 꺼짐</button>
       <button class="icon-btn chat-close" id="chatClose" aria-label="채팅방 닫기">✕</button>
     </header>
     <div class="chat-people" id="chatPeople" role="group" aria-label="보내는 사람 선택"></div>
@@ -1127,7 +1205,7 @@ const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
 const pad = (n) => String(n).padStart(2, '0');
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [] });
+const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null });
 let data = fresh();
 let uid = null;
 let unsub = null;
@@ -1144,6 +1222,9 @@ let chatMine = '';
 let chatSeen = 0;
 let chatSeenReady = false;
 let chatLastTs = 0;
+let chatNotifyOn = false;
+let audioCtx = null;
+let notifyFallbackToasted = false;
 
 function todayKey() {
   const d = new Date();
@@ -1219,6 +1300,13 @@ function normalize() {
     }))
     .slice(0, 30)
     : REWARDS.map(r => ({ id: r.id, name: r.name, cost: r.cost, emoji: r.emoji }));
+  data.notice = (data.notice && typeof data.notice === 'object' && String(data.notice.text || '').trim())
+    ? {
+        id: String(data.notice.id || ('notice-' + (Number(data.notice.updatedAt) || 0))),
+        text: String(data.notice.text).trim().slice(0, 300),
+        updatedAt: Number(data.notice.updatedAt) || 0
+      }
+    : null;
   Object.keys(data.daily).forEach(date => {
     const day = data.daily[date];
     if (!day || typeof day !== 'object') { delete data.daily[date]; return; }
@@ -1546,6 +1634,152 @@ function renderDday() {
     : '<p class="empty">다가오는 일정이 없어요 🌿</p>';
 }
 
+/* ============================================================
+   📢 가족 공지
+   ============================================================ */
+const NOTICE_SEEN_KEY = 'fq_seen_notice_id';
+
+function renderNotice() {
+  const n = data.notice;
+  const text = n && n.text ? String(n.text) : '';
+  const banner = $('noticeBanner');
+  if (banner) {
+    banner.classList.toggle('hidden', !text);
+    if (text) {
+      const textEl = $('noticeText');
+      const timeEl = $('noticeTime');
+      if (textEl) textEl.textContent = text;
+      if (timeEl) timeEl.textContent = n.updatedAt ? shortStamp(n.updatedAt) + ' 올림' : '';
+    }
+  }
+  const empty = $('noticeEmpty');
+  if (empty) empty.classList.toggle('hidden', !!text || !isAdminUnlocked);
+}
+function openNoticeEditor() {
+  if (!isAdminUnlocked) { requireAdmin(); return; }
+  if (document.querySelector('.modal-backdrop')) return;
+  const cur = data.notice && data.notice.text ? String(data.notice.text) : '';
+  $('modalRoot').innerHTML =
+    '<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="noticeEditTitle">' +
+      '<h2 id="noticeEditTitle">📢 가족 공지</h2>' +
+      '<div class="modal-sub">모든 기기의 대시보드 맨 위에 바로 보여요</div>' +
+      '<textarea class="notice-input" id="noticeInput" rows="4" maxlength="300" placeholder="예) 오늘 저녁 7시 할머니 댁 방문! 준비물은 손 씻기 카드 🐰">' + esc(cur) + '</textarea>' +
+      '<div class="modal-actions"><button class="btn" data-notice-cancel>취소</button><button class="btn primary" data-notice-save>저장</button></div>' +
+    '</div></div>';
+  const root = $('modalRoot');
+  const input = $('noticeInput');
+  if (input) setTimeout(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }, 60);
+  const cancel = root.querySelector('[data-notice-cancel]');
+  if (cancel) cancel.addEventListener('click', closeModal);
+  const saveBtn = root.querySelector('[data-notice-save]');
+  if (saveBtn) saveBtn.addEventListener('click', () => saveNotice(input ? input.value : ''));
+  if (input) input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveNotice(input.value); }
+  });
+}
+function saveNotice(text) {
+  if (!isAdminUnlocked) { requireAdmin(); return; }
+  const t = String(text || '').trim().slice(0, 300);
+  if (!t) { toast('공지 내용을 적어 주세요', 'warn'); return; }
+  data.notice = { id: newId('nt'), text: t, updatedAt: Date.now() };
+  chatStore(NOTICE_SEEN_KEY, data.notice.id);   /* 내가 쓴 공지는 내 기기에서 팝업으로 또 뜨지 않게 */
+  closeModal();
+  renderNotice();
+  save();
+  toast('📢 가족 공지를 올렸어요', 'good');
+}
+async function clearNotice() {
+  if (!isAdminUnlocked) { requireAdmin(); return; }
+  if (!(await askConfirm('가족 공지를 지울까요?', '지우기', true))) return;
+  data.notice = null;
+  renderNotice();
+  save();
+  toast('공지를 지웠어요', 'good');
+}
+
+/* ============================================================
+   알림 팝업 (새 공지 · 오늘/내일 D-Day)
+   - D-Day는 하루에 한 번, 새 공지는 공지마다 한 번 보여줍니다
+   ============================================================ */
+const DDAY_SEEN_PREFIX = 'fq_dday_seen_';
+let reminderTimer = null;
+
+function ddaySeenKey() { return DDAY_SEEN_PREFIX + todayKey(); }
+function ddayWho(who) {
+  const map = { '가족': '👨‍👩‍👧‍👦', '나연': '🐰', '가빈': '🐿️', '엄마': '👩', '아빠': '👨' };
+  const name = String(who || '가족');
+  return { name: name, emoji: map[name] || '🙂' };
+}
+function scheduleReminders(delay) {
+  if (reminderTimer) return;
+  reminderTimer = setTimeout(() => {
+    reminderTimer = null;
+    maybeShowReminders();
+  }, delay === undefined ? 1200 : delay);
+}
+function maybeShowReminders() {
+  if (!uid) return;
+  if (!$('appView') || $('appView').classList.contains('hidden')) return;
+  if (!$('modalRoot')) return;
+  if (!$('screensaver').classList.contains('hidden')) return;
+  if (document.querySelector('.modal-backdrop')) { scheduleReminders(4000); return; }
+
+  const today = todayKey();
+  const notice = data.notice && data.notice.text ? data.notice : null;
+  const noticeIsNew = !!notice && String(chatStore(NOTICE_SEEN_KEY) || '') !== String(notice.id || '');
+  const ddaySeen = chatStore(ddaySeenKey()) === '1';
+  const events = ddaySeen ? [] : (Array.isArray(data.events) ? data.events : [])
+    .filter(e => e && e.id && e.title && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')));
+  const todays = events.filter(e => daysBetween(today, e.date) === 0);
+  const tomorrows = events.filter(e => daysBetween(today, e.date) === 1);
+  const hasDday = !!(todays.length || tomorrows.length);
+  if (!noticeIsNew && !hasDday) return;
+
+  const row = (e) => {
+    const w = ddayWho(e.who);
+    const meta = [fullDate(e.date), e.memo ? String(e.memo) : ''].filter(Boolean).join(' · ');
+    return '<div class="dday-pop-row">' +
+      '<div class="dp-top"><span class="dday-pop-who">' + esc(w.emoji + ' ' + w.name) + '</span>' +
+        '<b>' + esc(e.title) + '</b></div>' +
+      '<span class="dday-pop-meta">' + esc(meta) + '</span>' +
+    '</div>';
+  };
+
+  let title = '🎉 오늘 D-Day!';
+  if (noticeIsNew) title = '📢 가족 공지가 도착했어요!';
+  else if (todays.length && tomorrows.length) title = '🎉 오늘도 내일도 특별한 날!';
+  else if (!todays.length) title = '⏰ 내일이 바로 그날!';
+
+  let body = '<div class="modal-sub">' + esc(fullDate(today)) + ' · 잊지 않도록 미리 알려드려요 💛</div>';
+  if (noticeIsNew) {
+    body += '<div class="notice-pop"><span class="np-mark" aria-hidden="true">📢</span><div style="flex:1 1 auto;min-width:0">' +
+      '<p class="np-text">' + esc(notice.text) + '</p>' +
+      (notice.updatedAt ? '<span class="np-time">' + esc(shortStamp(notice.updatedAt)) + ' 올림</span>' : '') +
+    '</div></div>';
+  }
+  if (todays.length) {
+    body += '<div class="dday-pop-sec">🍀 오늘 (D-DAY)</div><div class="dday-pop-list">' + todays.map(row).join('') + '</div>';
+  }
+  if (tomorrows.length) {
+    body += '<div class="dday-pop-sec">⏰ 내일 (D-1)</div><div class="dday-pop-list">' + tomorrows.map(row).join('') + '</div>';
+  }
+
+  if (hasDday) chatStore(ddaySeenKey(), '1');      /* D-Day는 오늘 한 번만 */
+  if (noticeIsNew) chatStore(NOTICE_SEEN_KEY, String(notice.id));  /* 새 공지는 이 기기에서 한 번만 */
+  const root = $('modalRoot');
+  root.innerHTML =
+    '<div class="modal-backdrop"><div class="modal dday-pop" role="dialog" aria-modal="true" aria-labelledby="ddayPopTitle">' +
+      '<h2 id="ddayPopTitle">' + title + '</h2>' +
+      body +
+      '<div class="modal-actions"><button class="btn primary" data-dday-ok>확인</button></div>' +
+    '</div></div>';
+  const close = () => { root.innerHTML = ''; };
+  const okBtn = root.querySelector('[data-dday-ok]');
+  if (okBtn) okBtn.addEventListener('click', close);
+  const backdrop = root.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+}
+
 function renderDayPanel() {
   $('dayPanelTitle').textContent = fullDate(selectedDate);
   const evs = eventsOn(selectedDate);
@@ -1572,6 +1806,7 @@ function renderAll() {
   renderShop();
   renderWishlist();
   renderManualPoints();
+  renderNotice();
   renderCalendar();
   renderDday();
   if (!$('dayPanel').classList.contains('hidden')) renderDayPanel();
@@ -1635,6 +1870,7 @@ function renderAdmin() {
   btn.textContent = isAdminUnlocked ? '🔓 관리자 모드' : '🔒 설정 잠금';
   btn.classList.toggle('on', isAdminUnlocked);
   $('changePinBtn').classList.toggle('hidden', !isAdminUnlocked);
+  renderNotice();
   if (chatOpen) renderChatMessages(true);
 }
 
@@ -1731,6 +1967,7 @@ function openDex(child) {
    ============================================================ */
 const CHAT_SEEN_PREFIX = 'fq.chat.seen.';
 const CHAT_SENDER_KEY = 'fq.chat.sender';
+const CHAT_NOTIFY_KEY = 'fq_chat_notify';   /* 🔔 알림 설정 (이 기기에만 저장) */
 
 function chatWho(name) {
   const n = String(name || '').trim();
@@ -1747,6 +1984,115 @@ function chatSeenKey() { return CHAT_SEEN_PREFIX + (uid || 'guest'); }
 function loadChatSender() {
   const saved = chatStore(CHAT_SENDER_KEY);
   chatMine = CHAT_PEOPLE.some(p => p.name === saved) ? String(saved) : '';
+}
+
+/* ---------------- 🔔 채팅 알림 (알림음 + 상태표시줄 알림) ---------------- */
+function loadChatNotify() {
+  chatNotifyOn = chatStore(CHAT_NOTIFY_KEY) === '1';
+}
+function notifySupported() {
+  try { return 'Notification' in window; } catch (e) { return false; }
+}
+function renderNotify() {
+  const label = chatNotifyOn ? '🔔 알림 켜짐' : '🔔 알림 꺼짐';
+  const hint = '가족 채팅 알림 ' + (chatNotifyOn ? '끄기' : '켜기');
+  ['notifyBtn', 'chatNotifyBtn'].forEach(id => {
+    const btn = $(id);
+    if (!btn) return;
+    btn.textContent = label;
+    btn.classList.toggle('on', chatNotifyOn);
+    btn.setAttribute('aria-pressed', chatNotifyOn ? 'true' : 'false');
+    btn.setAttribute('aria-label', hint);
+    btn.title = hint;
+  });
+}
+/* 사용자가 버튼을 누른 순간에만 오디오를 만들 수 있어서 클릭 때 미리 준비해 둡니다 */
+function audioCtxGet(create) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx && create) audioCtx = new AC();
+    if (audioCtx && audioCtx.state === 'suspended') { const p = audioCtx.resume(); if (p && p.catch) p.catch(() => {}); }
+    return audioCtx || null;
+  } catch (e) { return null; }
+}
+/* 짧고 부드러운 두 음짜리 알림음 (외부 파일 없이 Web Audio로) */
+function playChatChime() {
+  try {
+    const ctx = audioCtxGet(true);
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.02;
+    [[880, 0], [1174.66, 0.17]].forEach(note => {
+      const freq = note[0], off = note[1];
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t0 + off);
+      gain.gain.setValueAtTime(0.0001, t0 + off);
+      gain.gain.exponentialRampToValueAtTime(0.16, t0 + off + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.34);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0 + off);
+      osc.stop(t0 + off + 0.4);
+    });
+  } catch (e) { /* 소리를 못 내는 브라우저에서도 앱은 그대로 동작 */ }
+}
+async function toggleChatNotify() {
+  if (chatNotifyOn) {
+    chatNotifyOn = false;
+    chatStore(CHAT_NOTIFY_KEY, '0');
+    renderNotify();
+    toast('🔕 채팅 알림을 껐어요', 'good');
+    return;
+  }
+  chatNotifyOn = true;
+  chatStore(CHAT_NOTIFY_KEY, '1');
+  renderNotify();
+  audioCtxGet(true);
+  playChatChime();   /* 켜졌다는 걸 바로 들려드려요 */
+
+  if (!notifySupported()) {
+    toast('이 브라우저에서는 상태표시줄 알림을 지원하지 않아요 (소리는 울려요)', 'warn');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    toast('🔔 채팅 알림을 켰어요 · 새 메시지가 오면 알려드릴게요', 'good');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    toast('🔔 소리 알림은 켰어요 · 상태표시줄 알림은 브라우저 설정에서 허용해 주세요', 'warn');
+    return;
+  }
+  try {
+    const result = await Notification.requestPermission();
+    if (result === 'granted') toast('🔔 채팅 알림을 켰어요 · 새 메시지가 오면 알려드릴게요', 'good');
+    else toast('이 브라우저에서는 상태표시줄 알림이 꺼져 있어요 (소리는 울려요)', 'warn');
+  } catch (e) {
+    toast('이 브라우저에서는 상태표시줄 알림을 지원하지 않아요 (소리는 울려요)', 'warn');
+  }
+}
+/* 새 메시지를 상태표시줄(또는 알림 영역)에 띄웁니다. 안 되면 화면 안 토스트로 대신 알려요 */
+function showChatNotification(msg) {
+  if (!notifySupported() || Notification.permission !== 'granted') return;
+  if (!(document.hidden || !chatOpen)) return;
+  const who = chatWho(msg.sender);
+  try {
+    const notif = new Notification('🐰 가족 채팅 · ' + who.name, {
+      body: String(msg.text || '').slice(0, 120),
+      tag: 'family-quest-chat'
+    });
+    notif.onclick = () => {
+      try { window.focus(); } catch (e) { /* 무시 */ }
+      if (!chatOpen) openChat();
+      try { notif.close(); } catch (e) { /* 무시 */ }
+    };
+  } catch (e) {
+    if (!notifyFallbackToasted) {
+      notifyFallbackToasted = true;
+      toast('이 브라우저에서는 화면 안 알림으로 대신 알려드려요 (소리는 울려요)', 'warn');
+    }
+  }
 }
 function ensureChatSeen() {
   if (!uid) { chatSeen = 0; chatSeenReady = false; return; }
@@ -1860,16 +2206,25 @@ function renderChatMessages(forceBottom) {
 function syncChat() {
   if (!uid) { updateChatBadge(); return; }
   ensureChatSeen();
+  const latest = chatLatestTs();
   if (chatOpen) {
     renderChatMessages(false);
     markChatSeen();
+    chatLastTs = latest;
   } else {
-    const latest = chatLatestTs();
+    /* 이 기기에서 마지막으로 확인한 뒤에 새로 온, 내가 보내지 않은, 아직 안 읽은 메시지만 알립니다.
+       (로그인 직후 첫 불러오기(chatLastTs === 0)는 조용히 지나갑니다) */
     if (chatLastTs && latest > chatLastTs) {
-      let newest = null;
-      chatList().forEach(m => { if ((Number(m.createdAt) || 0) === latest) newest = m; });
-      if (newest && newest.sender !== chatMine) {
+      const incoming = chatList().filter(m =>
+        (Number(m.createdAt) || 0) > Math.max(chatLastTs, chatSeen) && m.sender !== chatMine
+      );
+      if (incoming.length) {
+        const newest = incoming[incoming.length - 1];
         toast('💬 ' + chatWho(newest.sender).emoji + ' ' + newest.sender + ' · ' + String(newest.text).slice(0, 22), 'good');
+        if (chatNotifyOn) {
+          playChatChime();
+          showChatNotification(newest);
+        }
       }
     }
     chatLastTs = latest;
@@ -1894,6 +2249,7 @@ function closeChat() {
   document.body.classList.remove('chat-open');
   markChatSeen();
   updateChatBadge();
+  chatLastTs = chatLatestTs();
 }
 function selectChatSender(name) {
   chatMine = CHAT_PEOPLE.some(p => p.name === name) ? name : '';
@@ -1939,6 +2295,10 @@ async function delChatMsg(id) {
 
 function bindChat() {
   $('chatBtn').addEventListener('click', openChat);
+  ['notifyBtn', 'chatNotifyBtn'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.addEventListener('click', toggleChatNotify);
+  });
   $('chatClose').addEventListener('click', closeChat);
   $('chatRoot').addEventListener('click', e => { if (e.target === $('chatRoot')) closeChat(); });
   $('chatSend').addEventListener('click', sendChat);
@@ -2416,7 +2776,7 @@ function tick() {
   if ($('ssDate')) $('ssDate').textContent = d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + WEEK[d.getDay()] + '요일';
   if (keyOf(d) !== lastToday) {
     lastToday = keyOf(d);
-    if (!$('appView').classList.contains('hidden')) renderAll();
+    if (!$('appView').classList.contains('hidden')) { renderAll(); scheduleReminders(300); }
   }
 }
 
@@ -2504,6 +2864,7 @@ onAuthStateChanged(auth, user => {
     normalize();
     renderAll();
     tick();
+    scheduleReminders();
     setStatus('모든 기기와 동기화됨', 'ok');
     if (!snap.exists()) save();
     resetIdle();
@@ -2582,6 +2943,8 @@ document.addEventListener('click', async e => {
     );
     return;
   }
+  if (t.id === 'noticeWriteBtn' || t.id === 'noticeEditBtn') { openNoticeEditor(); return; }
+  if (t.id === 'noticeDeleteBtn') { clearNotice(); return; }
   if (t.id === 'screensaverBtn') { openScreensaver(); return; }
   if (t.id === 'adminBtn') {
     if (isAdminUnlocked) { isAdminUnlocked = false; renderAdmin(); toast('🔒 설정을 잠갔어요', 'good'); }
@@ -2616,8 +2979,12 @@ document.addEventListener('keydown', e => {
 ['click', 'touchstart', 'mousemove'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
 
 loadChatSender();
+loadChatNotify();
 bindChat();
 renderChatPeople();
+renderNotify();
+/* 첫 터치·클릭에 오디오를 열어 두면 그 뒤에 오는 채팅 알림음이 막히지 않아요 */
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => audioCtxGet(true), { once: true, passive: true }));
 tick();
 setInterval(tick, 1000);
 resetIdle();
