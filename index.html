@@ -462,11 +462,17 @@ body.admin-locked .add-row,
 body.admin-locked .icon-btn[data-del-task],
 body.admin-locked .icon-btn[data-del-bonus],
 body.admin-locked .mini[data-reset],
+body.admin-locked .add-event,
+body.admin-locked #quickAddEvent,
+body.admin-locked .icon-btn[data-edit-event],
 body.admin-locked .icon-btn[data-del-event],
 body.admin-locked .icon-btn[data-wish-del],
 body.admin-locked .wish input[type=checkbox],
 body.admin-locked .icon-btn[data-undo-manual],
 body.admin-locked .icon-btn[data-undo-redeem]{display:none!important}
+.edit-field{margin-top:10px; text-align:left}
+.edit-field label{display:block; font-size:11px; font-weight:800; color:var(--muted); margin-bottom:4px}
+.edit-field input,.edit-field select{width:100%; font-size:13px; padding:9px 10px; border-radius:11px; background:#fffdf9}
 .pin-field{margin-top:11px; text-align:left}
 .pin-field label{display:block; font-size:11px; font-weight:800; color:var(--muted); margin-bottom:4px}
 .pin-field input{text-align:center; letter-spacing:.55em; font-size:19px; font-weight:900; padding:11px 11px 11px 17px; border-radius:12px; background:#fffdf9}
@@ -1267,6 +1273,12 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
 const pad = (n) => String(n).padStart(2, '0');
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const validDateKey = (s) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ''));
+  if (!m) return false;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
+};
 
 const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
 let data = fresh();
@@ -1985,6 +1997,7 @@ function renderDayPanel() {
         return '<div class="event who-' + esc(e.who) + '">' +
           '<div class="event-top"><strong>' + esc(e.title) + '</strong>' +
             '<span class="who-tag ' + esc(e.who) + '">' + esc(e.who) + '</span>' +
+            '<button class="icon-btn" data-edit-event="' + esc(e.id) + '" aria-label="일정 수정">✏️</button>' +
             '<button class="icon-btn" data-del-event="' + esc(e.id) + '" aria-label="일정 삭제">✕</button></div>' +
           '<div class="event-meta">' + dLabel + (e.memo ? ' · ' + esc(e.memo) : '') + '</div>' +
           (e.prep && e.prep.length ? '<div class="prep">' + e.prep.map((p, i) =>
@@ -2957,6 +2970,7 @@ function openDay(key) {
 }
 
 async function addEvent() {
+  if (!requireAdmin()) return;
   const title = ($('eventTitle').value || '').trim();
   const date = $('eventDate').value || selectedDate;
   if (!title) { toast('일정 이름을 적어 주세요 📅', 'warn'); $('eventTitle').focus(); return; }
@@ -2976,6 +2990,70 @@ async function addEvent() {
   renderMemosAll();
   save();
   toast('📅 일정을 저장했어요', 'good');
+}
+
+function openEventEditor(id) {
+  if (!requireAdmin()) return;
+  const e = data.events.find(x => x.id === id);
+  if (!e) return;
+  if (document.querySelector('.modal-backdrop')) closeModal();
+  const prepText = (e.prep || []).map(p => p.text).join(', ');
+  const whos = ['가족', '나연', '가빈', '엄마', '아빠'];
+  const whoOptions = whos.map(w => '<option value="' + esc(w) + '"' + (w === e.who ? ' selected' : '') + '>' + esc(w) + '</option>').join('');
+  $('modalRoot').innerHTML =
+    '<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="eventEditHeading">' +
+      '<h2 id="eventEditHeading">✏️ 일정 수정</h2>' +
+      '<div class="modal-sub">엄마·아빠만 고칠 수 있어요</div>' +
+      '<div class="edit-field"><label>일정 이름</label><input id="evEditTitle" maxlength="60" value="' + esc(e.title) + '" placeholder="예: 피아노 콩쿠르"></div>' +
+      '<div class="edit-field"><label>날짜</label><input id="evEditDate" type="date" value="' + esc(e.date) + '"></div>' +
+      '<div class="edit-field"><label>누구</label><select id="evEditWho">' + whoOptions + '</select></div>' +
+      '<div class="edit-field"><label>장소·메모</label><input id="evEditMemo" maxlength="120" value="' + esc(e.memo || '') + '" placeholder="장소·메모"></div>' +
+      '<div class="edit-field"><label>준비물 (쉼표로 구분)</label><input id="evEditPrep" maxlength="200" value="' + esc(prepText) + '" placeholder="예: 물병, 체육복"></div>' +
+      '<div class="modal-actions"><button class="btn" data-event-cancel>취소</button><button class="btn primary" data-event-save>저장</button></div>' +
+    '</div></div>';
+  const root = $('modalRoot');
+  const titleInput = $('evEditTitle');
+  if (titleInput) setTimeout(() => { titleInput.focus(); titleInput.setSelectionRange(titleInput.value.length, titleInput.value.length); }, 60);
+  const cancel = root.querySelector('[data-event-cancel]');
+  if (cancel) cancel.addEventListener('click', closeModal);
+  const saveBtn = root.querySelector('[data-event-save]');
+  if (saveBtn) saveBtn.addEventListener('click', () => saveEventEdit(id));
+  const inputs = ['evEditTitle', 'evEditDate', 'evEditMemo', 'evEditPrep'].map(k => $(k)).filter(Boolean);
+  inputs.forEach(inp => inp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); saveEventEdit(id); } }));
+  const backdrop = root.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', ev => { if (ev.target === backdrop) closeModal(); });
+}
+
+function saveEventEdit(id) {
+  if (!requireAdmin()) return;
+  const e = data.events.find(x => x.id === id);
+  if (!e) return;
+  const title = ($('evEditTitle').value || '').trim();
+  const date = $('evEditDate').value || e.date;
+  if (!title) { toast('일정 이름을 적어 주세요 📅', 'warn'); $('evEditTitle').focus(); return; }
+  if (!validDateKey(date)) { toast('날짜를 골라 주세요 📅', 'warn'); return; }
+  const oldPrep = Array.isArray(e.prep) ? e.prep : [];
+  const used = [];
+  const prep = ($('evEditPrep').value || '').split(',').map(s => s.trim()).filter(Boolean).map(text => {
+    const hit = oldPrep.find((p, i) => used.indexOf(i) < 0 && String(p.text) === text);
+    if (hit) { used.push(oldPrep.indexOf(hit)); return { text: text, done: !!hit.done }; }
+    return { text: text, done: false };
+  });
+  e.title = title;
+  e.date = date;
+  e.who = $('evEditWho').value || e.who;
+  e.memo = ($('evEditMemo').value || '').trim();
+  e.prep = prep;
+  selectedDate = date;
+  if (viewMonth.getFullYear() !== Number(date.slice(0, 4)) || viewMonth.getMonth() !== Number(date.slice(5, 7)) - 1) {
+    viewMonth = new Date(date + 'T00:00:00');
+  }
+  closeModal();
+  renderCalendar();
+  renderDayPanel();
+  renderDday();
+  save();
+  toast('✏️ 일정을 고쳤어요', 'good');
 }
 
 async function delEvent(id) {
@@ -3145,6 +3223,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.reward) { redeemReward(t.dataset.child, t.dataset.reward); return; }
   if (t.dataset.undoRedeem) { undoRedeem(t.dataset.undoRedeem); return; }
   if (t.dataset.wishDel) { delWish(t.dataset.wishDel); return; }
+  if (t.dataset.editEvent) { openEventEditor(t.dataset.editEvent); return; }
   if (t.dataset.delEvent) { delEvent(t.dataset.delEvent); return; }
   if (t.dataset.date) { openDay(t.dataset.date); return; }
   if (t.id === 'prevMonth') { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); renderCalendar(); return; }
