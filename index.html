@@ -881,6 +881,7 @@ body.admin-locked .manual{padding-right:8px}
 .study-logs{max-height:186px; overflow-y:auto; padding-right:2px}
 .study-log{display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; background:#fcf8f1; border:1px solid #f7efe3}
 .study-log + .study-log{margin-top:4px}
+.study-log.asking{flex-wrap:wrap; row-gap:5px; background:#fdf4f5; border-color:#f6e2e6}
 .sl-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto; white-space:nowrap}
 .sl-who.나연{background:var(--pink-soft); color:#a8617a}
 .sl-who.가빈{background:var(--mint-soft); color:#4a7856}
@@ -3198,22 +3199,22 @@ function renderStudyLogs() {
   box.innerHTML = all.slice(0, STUDY_LIST_MAX).map(s => {
     const c = CHILD[s.who] || CHILD.nayeon;
     const day = String(s.date || '').slice(5).replace('-', '/');
-    let tools = '';
-    if (isAdminUnlocked) {
-      /* 모달을 하나씩만 띄우는 규칙이라 확인 창 대신 이 줄에서 한 번 더 물어봐요 */
-      tools = study.delPending === s.id
-        ? '<span class="sl-confirm">지울까요?</span>' +
-          '<button class="mini" data-study-del-ok="' + esc(s.id) + '">지우기</button>' +
-          '<button class="mini" data-study-del-cancel="1">취소</button>'
-        : '<button class="icon-btn" data-study-del="' + esc(s.id) + '" aria-label="공부 기록 삭제" title="이 기록 지우기">✕</button>';
+    const asking = isAdminUnlocked && study.delPending === s.id;
+    let mid = '<span class="sl-subject">' + esc(s.subject || '공부') + '</span>';
+    if (asking) {
+      /* 모달은 하나씩만 띄우는 규칙이라 확인 창 대신 이 줄에서 한 번 더 물어봐요 */
+      mid += '<span class="sl-confirm">지울까요?</span>' +
+        '<button class="mini" data-study-del-ok="' + esc(s.id) + '">지우기</button>' +
+        '<button class="mini" data-study-del-cancel="1">취소</button>';
+    } else {
+      mid += '<span class="sl-mode" aria-hidden="true">' + (s.mode === 'timer' ? '⏳' : '⏱️') + '</span>' +
+        '<span class="sl-dur">' + esc(studyDurText(s.seconds)) + '</span>' +
+        '<span class="sl-date">' + esc(day) + '</span>' +
+        (isAdminUnlocked ? '<button class="icon-btn" data-study-del="' + esc(s.id) + '" aria-label="공부 기록 삭제" title="이 기록 지우기">✕</button>' : '');
     }
-    return '<div class="study-log">' +
+    return '<div class="study-log' + (asking ? ' asking' : '') + '">' +
       '<span class="sl-who ' + esc(c.name) + '">' + c.emoji + ' ' + esc(c.name) + '</span>' +
-      '<span class="sl-subject">' + esc(s.subject || '공부') + '</span>' +
-      '<span class="sl-mode" aria-hidden="true">' + (s.mode === 'timer' ? '⏳' : '⏱️') + '</span>' +
-      '<span class="sl-dur">' + esc(studyDurText(s.seconds)) + '</span>' +
-      '<span class="sl-date">' + esc(day) + '</span>' +
-      tools +
+      mid +
     '</div>';
   }).join('');
 }
