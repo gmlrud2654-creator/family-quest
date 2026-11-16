@@ -496,6 +496,12 @@ body.admin-locked .icon-btn[data-undo-redeem]{display:none!important}
 .pin-field input{text-align:center; letter-spacing:.55em; font-size:19px; font-weight:900; padding:11px 11px 11px 17px; border-radius:12px; background:#fffdf9}
 .pin-msg{min-height:17px; font-size:11px; color:#b0a695; margin-top:9px; text-align:center; line-height:1.5}
 .pin-msg.err{color:#c0576f; font-weight:700}
+@keyframes pinShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-7px)}36%{transform:translateX(6px)}54%{transform:translateX(-4px)}72%{transform:translateX(3px)}}
+.shake{animation:pinShake .42s ease}
+.child-pin-row{display:flex; align-items:center; gap:9px; margin-top:10px; text-align:left}
+.child-pin-row .cp-who{flex:0 0 78px; font-size:12.5px; font-weight:800; color:var(--ink2)}
+.child-pin-row input{flex:1; min-width:0; text-align:center; letter-spacing:.4em; font-size:17px; font-weight:900; padding:9px 9px 9px 13px; border-radius:12px; background:#fffdf9}
+.shop-pin-hint{font-size:10.5px; font-weight:700; color:#a98c58; margin:-2px 0 8px; line-height:1.45}
 
 /* ---------------- screensaver ---------------- */
 .screensaver{
@@ -983,6 +989,7 @@ body.admin-locked .manual{padding-right:8px}
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
       <button class="pill-btn hidden" id="changePinBtn">🔑 PIN 변경</button>
+      <button class="pill-btn hidden" id="childPinsBtn" aria-label="아이들 상점 비밀번호 보기·바꾸기" title="🐰 나연·🐿️ 가빈이 상점에서 교환할 때 쓰는 비밀번호를 보고 바꿔요 (엄마·아빠 전용)">🔐 아이들 상점 비밀번호</button>
       <button class="pill-btn" id="screensaverBtn">🌙 대기화면</button>
       <button class="pill-btn ghost" id="logoutBtn">로그아웃</button>
     </div>
@@ -1248,6 +1255,7 @@ body.admin-locked .manual{padding-right:8px}
         <select class="shop-child" id="shopChild" aria-label="포인트를 사용할 아이">
           <option value="nayeon">🐰 나연</option><option value="gabin">🐿️ 가빈</option>
         </select>
+        <p class="shop-pin-hint">🔐 교환할 때 그 아이의 비밀번호 4자리를 넣어요</p>
         <div class="shop-grid" id="rewards"></div>
         <div class="reward-add">
           <div class="line">
@@ -1352,6 +1360,8 @@ const CHILD = {
   nayeon: { name: '나연', emoji: '🐰', dot: 'dot-n', tag: '나연' },
   gabin:  { name: '가빈', emoji: '🐿️', dot: 'dot-g', tag: '가빈' }
 };
+/* 🔐 상점에서 아이가 교환할 때 쓰는 비밀번호 (처음 값: 나연 1111 / 가빈 2222) */
+const CHILD_PIN_DEFAULT = { nayeon: '1111', gabin: '2222' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const DEFAULT_TASKS = ['주산', '영어', '수학', '한자', '받아쓰기', '독서', '일기', '독해']
   .map((name, i) => ({ id: 'd' + i, name: name, points: 20 }));
@@ -1594,6 +1604,13 @@ function normalize() {
   if (!data.customBonuses || typeof data.customBonuses !== 'object') data.customBonuses = {};
   if (!data.allClear || typeof data.allClear !== 'object') data.allClear = {};
   if (!data.adminPin || !/^\d{4}$/.test(String(data.adminPin))) data.adminPin = '0000';
+  /* 🔐 아이별 상점 비밀번호 — 모든 기기가 같이 쓰도록 data.settings 아래에 둡니다 */
+  if (!data.settings || typeof data.settings !== 'object') data.settings = {};
+  const savedPins = (data.settings.childPins && typeof data.settings.childPins === 'object') ? data.settings.childPins : {};
+  const pinOf = (child) => /^\d{4}$/.test(String(savedPins[child] == null ? '' : savedPins[child]).trim())
+    ? String(savedPins[child]).trim()
+    : CHILD_PIN_DEFAULT[child];
+  data.settings.childPins = { nayeon: pinOf('nayeon'), gabin: pinOf('gabin') };
   data.chat = Array.isArray(data.chat) ? data.chat
     .filter(m => m && m.id && typeof m.text === 'string' && m.text.trim())
     .map(m => ({
@@ -2453,6 +2470,7 @@ function renderAdmin() {
   btn.textContent = isAdminUnlocked ? '🔓 관리자 모드' : '🔒 설정 잠금';
   btn.classList.toggle('on', isAdminUnlocked);
   $('changePinBtn').classList.toggle('hidden', !isAdminUnlocked);
+  if ($('childPinsBtn')) $('childPinsBtn').classList.toggle('hidden', !isAdminUnlocked);
   renderNotice();
   if (chatOpen) renderChatMessages(true);
 }
@@ -2514,6 +2532,81 @@ async function changePin() {
   renderAdmin();
   save();
   toast('🔑 새 비밀번호로 바꿨어요', 'good');
+}
+
+/* ---------------- 🔐 아이들 상점 비밀번호 (엄마·아빠 전용) ---------------- */
+function validChildPin(pin) { return /^\d{4}$/.test(String(pin == null ? '' : pin).trim()); }
+
+function childPin(child) {
+  const saved = (data && data.settings && data.settings.childPins) ? data.settings.childPins : null;
+  const pin = saved ? String(saved[child] == null ? '' : saved[child]).trim() : '';
+  return validChildPin(pin) ? pin : (CHILD_PIN_DEFAULT[child] || '1111');
+}
+
+function verifyChildPin(child, pin) {
+  return validChildPin(pin) && String(pin).trim() === childPin(child);
+}
+
+/* 엄마·아빠가 설정 잠금을 푼 상태에서만 저장돼요 */
+function saveChildPins(nayeonPin, gabinPin) {
+  if (!isAdminUnlocked) return { ok: false, reason: 'admin' };
+  const n = String(nayeonPin == null ? '' : nayeonPin).trim();
+  const g = String(gabinPin == null ? '' : gabinPin).trim();
+  if (!validChildPin(n) || !validChildPin(g)) return { ok: false, reason: 'format' };
+  if (!data.settings || typeof data.settings !== 'object') data.settings = {};
+  data.settings.childPins = { nayeon: n, gabin: g };
+  save();
+  return { ok: true };
+}
+
+function openChildPins() {
+  if (!requireAdmin()) return;
+  if (document.querySelector('.modal-backdrop')) return;
+  const row = (child) => {
+    const c = CHILD[child];
+    const who = c.emoji + ' ' + c.name;
+    return '<div class="child-pin-row">' +
+      '<span class="cp-who">' + who + '</span>' +
+      '<input id="pinEdit_' + child + '" type="text" inputmode="numeric" maxlength="4" autocomplete="off" value="' + esc(childPin(child)) + '" aria-label="' + who + ' 상점 비밀번호 4자리">' +
+    '</div>';
+  };
+  $('modalRoot').innerHTML =
+    '<div class="modal-backdrop"><div class="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="childPinsTitle">' +
+      '<h2 id="childPinsTitle" style="justify-content:center">🔐 아이들 상점 비밀번호</h2>' +
+      '<div class="modal-sub">보너스 상점에서 아이가 교환할 때 넣는 숫자 4자리예요</div>' +
+      row('nayeon') + row('gabin') +
+      '<p class="pin-msg" id="pinAdminMsg">처음 값은 🐰 나연 1111 · 🐿️ 가빈 2222 예요</p>' +
+      '<div class="modal-actions"><button class="btn" data-pin-cancel>취소</button><button class="btn primary" data-pin-save>저장</button></div>' +
+    '</div></div>';
+  const root = $('modalRoot');
+  const cancel = root.querySelector('[data-pin-cancel]');
+  if (cancel) cancel.addEventListener('click', closeModal);
+  const saveBtn = root.querySelector('[data-pin-save]');
+  if (saveBtn) saveBtn.addEventListener('click', () => saveChildPinsFromForm());
+  root.querySelectorAll('.child-pin-row input').forEach(inp => inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveChildPinsFromForm(); }
+  }));
+  const first = $('pinEdit_nayeon');
+  if (first) setTimeout(() => { first.focus(); first.setSelectionRange(first.value.length, first.value.length); }, 60);
+}
+
+function saveChildPinsFromForm() {
+  const nEl = $('pinEdit_nayeon');
+  const gEl = $('pinEdit_gabin');
+  const res = saveChildPins(nEl ? nEl.value : '', gEl ? gEl.value : '');
+  if (res.ok) {
+    closeModal();
+    toast('🔐 아이들 상점 비밀번호를 저장했어요', 'good');
+    return res;
+  }
+  const msg = $('pinAdminMsg');
+  if (msg) {
+    msg.className = 'pin-msg err';
+    msg.textContent = res.reason === 'admin'
+      ? '🔒 설정 잠금을 먼저 풀어 주세요.'
+      : '🐰 나연·🐿️ 가빈 비밀번호를 각각 숫자 4자리로 입력해 주세요.';
+  }
+  return res;
 }
 
 function requireAdmin() {
@@ -3576,16 +3669,100 @@ async function redeemReward(child, rewardId) {
     toast('포인트가 부족해요! ' + CHILD[child].name + ' 잔액은 ' + fmt(bal) + 'P (필요 ' + fmt(r.cost) + 'P)', 'warn');
     return;
   }
-  const ok = await askConfirm(
-    CHILD[child].emoji + ' ' + CHILD[child].name + '의 잔액 ' + fmt(bal) + 'P에서\n' +
-    r.emoji + ' ' + r.name + ' (' + fmt(r.cost) + 'P)을(를) 교환할까요?\n교환 후 잔액은 ' + fmt(bal - r.cost) + 'P예요.',
-    '교환'
-  );
-  if (!ok) return;
+  /* 포인트가 충분할 때만 아이 비밀번호를 물어보고, 맞으면 교환해요 */
+  await askChildPin(child, rewardId);
+}
+
+/* 비밀번호가 맞을 때만 실제로 교환하는 부분 (모달·테스트 모두 이 함수를 거쳐요) */
+function buyWithPin(child, rewardId, pin) {
+  if (CHILDREN.indexOf(child) < 0) return { ok: false, reason: 'missing' };
+  const r = rewardList().find(x => x.id === rewardId);
+  if (!r) return { ok: false, reason: 'missing' };
+  if (!verifyChildPin(child, pin)) return { ok: false, reason: 'pin' };
+  const bal = balance(child);
+  if (bal < r.cost) {
+    toast('포인트가 부족해요! ' + CHILD[child].name + ' 잔액은 ' + fmt(bal) + 'P (필요 ' + fmt(r.cost) + 'P)', 'warn');
+    return { ok: false, reason: 'points' };
+  }
   data.redemptions.push({ id: newId('r'), child: child, name: r.name, cost: r.cost, date: todayKey() });
   renderAll();
   save();
   toast('🎉 ' + CHILD[child].name + ' ' + r.name + ' 교환 완료!', 'good');
+  playBuyChime();
+  return { ok: true, reward: r };
+}
+
+/* 🔐 교환 전 비밀번호 모달 — 맞을 때까지 닫지 않고, 틀리면 흔들며 알려 줘요 */
+function askChildPin(child, rewardId) {
+  return new Promise(resolve => {
+    if (document.querySelector('.modal-backdrop')) { resolve(false); return; }
+    const c = CHILD[child];
+    const who = c.emoji + ' ' + c.name;
+    $('modalRoot').innerHTML =
+      '<div class="modal-backdrop"><div class="modal small-modal" role="dialog" aria-modal="true" aria-labelledby="childPinTitle">' +
+        '<h2 id="childPinTitle" style="justify-content:center">🔐 ' + who + ' 비밀번호 확인</h2>' +
+        '<div class="modal-sub">' + who + '가 상점에서 교환하려면 비밀번호가 필요해요</div>' +
+        '<div class="pin-field"><label>' + who + ' 비밀번호 4자리</label>' +
+          '<input id="childPinInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="' + who + ' 비밀번호 4자리">' +
+        '</div>' +
+        '<p class="pin-msg" id="childPinMsg">숫자 4자리를 넣고 확인을 눌러 주세요</p>' +
+        '<div class="modal-actions">' +
+          '<button class="btn" data-pin-no>취소</button>' +
+          '<button class="btn primary" data-pin-yes>확인</button>' +
+        '</div>' +
+      '</div></div>';
+    const root = $('modalRoot');
+    const done = (v) => { root.innerHTML = ''; resolve(v); };
+    const submit = () => {
+      const inp = root.querySelector('#childPinInput');
+      const msg = root.querySelector('#childPinMsg');
+      const pin = inp ? String(inp.value || '').trim() : '';
+      const fail = (text) => {
+        if (msg) { msg.className = 'pin-msg err'; msg.textContent = text; }
+        const box = root.querySelector('.modal');
+        if (box && box.classList) { box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+        if (inp) { inp.value = ''; inp.focus(); }
+      };
+      if (!validChildPin(pin)) { fail('숫자 4자리로 입력해 주세요.'); return; }
+      const res = buyWithPin(child, rewardId, pin);
+      if (res.ok) { done(true); return; }
+      if (res.reason === 'pin') { fail('비밀번호가 맞지 않아요. 다시 넣어 주세요.'); return; }
+      done(false);   /* 포인트 부족 등은 이미 토스트로 안내했어요 */
+    };
+    root.querySelector('[data-pin-yes]').addEventListener('click', submit);
+    root.querySelector('[data-pin-no]').addEventListener('click', () => done(false));
+    root.querySelector('.modal-backdrop').addEventListener('click', e => {
+      if (e.target.classList.contains('modal-backdrop')) done(false);
+    });
+    const inp0 = root.querySelector('#childPinInput');
+    if (inp0) {
+      inp0.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      setTimeout(() => inp0.focus(), 60);
+    }
+  });
+}
+
+/* 교환 성공 소리 — 짧고 밝은 세 음 (외부 파일 없이) */
+function playBuyChime() {
+  try {
+    const ctx = audioCtxGet(true);
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.02;
+    [[659.25, 0], [830.61, 0.11], [1046.5, 0.22]].forEach(note => {
+      const freq = note[0], off = note[1];
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t0 + off);
+      gain.gain.setValueAtTime(0.0001, t0 + off);
+      gain.gain.exponentialRampToValueAtTime(0.14, t0 + off + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0 + off);
+      osc.stop(t0 + off + 0.34);
+    });
+  } catch (e) { /* 소리를 못 내는 브라우저에서도 교환은 그대로 */ }
 }
 
 async function undoRedeem(id) {
@@ -4098,6 +4275,7 @@ document.addEventListener('click', async e => {
     return;
   }
   if (t.id === 'changePinBtn') { changePin(); return; }
+  if (t.id === 'childPinsBtn') { openChildPins(); return; }
 });
 
 if ($('eventDate')) $('eventDate').addEventListener('change', () => {
