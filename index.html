@@ -647,6 +647,28 @@ body.admin-locked .notice-empty{display:none!important}
 .notice-pop .np-mark{font-size:18px; line-height:1.3}
 .notice-pop .np-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; white-space:pre-wrap; word-break:keep-all; margin:0}
 .notice-pop .np-time{display:block; font-size:9.5px; font-weight:700; color:#b6a894; margin-top:5px}
+/* 공지 닫기(모두에게 보이는 버튼) */
+.nb-close{
+  flex:0 0 auto; width:24px; height:24px; border-radius:99px; border:1px solid #f0e2cb;
+  background:#fffdf8; color:#b3a58f; font-size:11px; font-weight:900; line-height:1;
+  cursor:pointer; display:grid; place-items:center; transition:.15s;
+}
+.nb-close:hover{background:#fff3e2; border-color:#e9d4b3; color:#9a7a45}
+/* 📋 공지 내역 버튼 · 모달 */
+.pill-btn.notice-hist{position:relative}
+.pill-btn.notice-hist .nh-dot{display:none; width:6px; height:6px; border-radius:99px; background:#e98fa8; margin-left:1px}
+.pill-btn.notice-hist.has-new .nh-dot{display:inline-block}
+.notice-hist{max-width:480px}
+.notice-hist .modal-actions{justify-content:space-between}
+.nh-list{display:flex; flex-direction:column; gap:7px; margin-top:12px; max-height:50vh; overflow-y:auto; padding-right:2px}
+.nh-item{border:1px solid #f1e4d0; background:linear-gradient(180deg,#fffdf8,#fdf7ee); border-radius:14px; padding:9px 11px}
+.nh-item.cur{border-color:#f0d8ae; background:linear-gradient(135deg,#fff6e4,#ffeef2)}
+.nh-top{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.nh-time{font-size:9.5px; font-weight:800; color:#b6a894; font-variant-numeric:tabular-nums; letter-spacing:.01em}
+.nh-badge{font-size:9px; font-weight:900; color:#8a6520; background:#fff2d6; border:1px solid #f0dcb4; border-radius:99px; padding:1px 7px; white-space:nowrap}
+.nh-acts{margin-left:auto; display:flex; align-items:center; gap:4px}
+.nh-acts .nh-show{font-size:10px; padding:3px 8px}
+.nh-text{font-size:12.5px; font-weight:800; color:var(--ink); line-height:1.6; margin-top:5px; white-space:pre-wrap; word-break:keep-all}
 
 /* ---------------- D-Day 팝업 ---------------- */
 .dday-pop{max-width:424px; text-align:left}
@@ -809,6 +831,7 @@ body.admin-locked .manual{padding-right:8px}
       <span class="account-email hidden" id="accountEmail"></span>
       <button class="pill-btn chat" id="chatBtn" aria-label="가족 채팅방 열기"><span aria-hidden="true">💬</span> 가족 채팅<span class="chat-badge hidden" id="chatBadge">0</span></button>
       <button class="pill-btn notify" id="notifyBtn" aria-pressed="false" aria-label="가족 채팅 알림 켜기" title="새 채팅 메시지를 알림음과 상태표시줄 알림으로 받아요">🔔 알림 꺼짐</button>
+      <button class="pill-btn notice-hist" id="noticeHistoryBtn" aria-label="공지 내역 열기" title="지난 가족 공지를 모두 모아 봐요"><span aria-hidden="true">📋</span> 공지 내역<span class="nh-dot" aria-hidden="true"></span></button>
       <button class="pill-btn" id="ledgerBtn">📊 적립 내역</button>
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
@@ -829,6 +852,7 @@ body.admin-locked .manual{padding-right:8px}
       <button class="mini" id="noticeEditBtn">✏️ 수정</button>
       <button class="mini" id="noticeDeleteBtn">🗑 지우기</button>
     </div>
+    <button class="nb-close" id="noticeHideBtn" aria-label="공지 닫기" title="이 공지 닫기 (공지 내역에서 다시 볼 수 있어요)">✕</button>
   </section>
   <section class="notice-empty hidden" id="noticeEmpty">
     <span>📢 오늘의 가족 공지를 남겨 볼까요?</span>
@@ -1211,7 +1235,7 @@ const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
 const pad = (n) => String(n).padStart(2, '0');
 const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null });
+const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
 let data = fresh();
 let uid = null;
 let unsub = null;
@@ -1313,6 +1337,21 @@ function normalize() {
         updatedAt: Number(data.notice.updatedAt) || 0
       }
     : null;
+  /* 📋 공지 내역: 최신순 50개까지 보관, 지금 떠 있는 공지가 빠져 있으면 함께 채워 넣기 */
+  data.noticeHistory = Array.isArray(data.noticeHistory) ? data.noticeHistory
+    .filter(h => h && h.id && String(h.text || '').trim())
+    .map(h => ({
+      id: String(h.id),
+      text: String(h.text).trim().slice(0, 300),
+      createdAt: Number(h.createdAt) || 0
+    }))
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))
+    .slice(0, NOTICE_HISTORY_MAX)
+    : [];
+  if (data.notice && !data.noticeHistory.some(h => String(h.id) === String(data.notice.id))) {
+    data.noticeHistory.unshift({ id: String(data.notice.id), text: data.notice.text, createdAt: Number(data.notice.updatedAt) || 0 });
+    data.noticeHistory = data.noticeHistory.slice(0, NOTICE_HISTORY_MAX);
+  }
   Object.keys(data.daily).forEach(date => {
     const day = data.daily[date];
     if (!day || typeof day !== 'object') { delete data.daily[date]; return; }
@@ -1656,13 +1695,41 @@ function renderDday() {
    📢 가족 공지
    ============================================================ */
 const NOTICE_SEEN_KEY = 'fq_seen_notice_id';
+const NOTICE_HIDDEN_KEY = 'fq_hidden_notice_id';   /* 이 기기에서 닫아 둔 공지 id (모두에게 보이는 닫기 버튼) */
+const NOTICE_HISTORY_MAX = 50;
+
+function noticeHiddenId() { return String(chatStore(NOTICE_HIDDEN_KEY) || ''); }
+function noticeStamp(ts) {
+  if (!ts) return '';
+  const d = new Date(Number(ts));
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function noticeHistorySorted() {
+  return (Array.isArray(data.noticeHistory) ? data.noticeHistory : [])
+    .filter(h => h && h.id && String(h.text || '').trim())
+    .slice()
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+}
+function upsertNoticeHistory(entry) {
+  if (!entry || !entry.id || !String(entry.text || '').trim()) return;
+  const item = {
+    id: String(entry.id),
+    text: String(entry.text).trim().slice(0, 300),
+    createdAt: Number(entry.createdAt) || Date.now()
+  };
+  data.noticeHistory = [item]
+    .concat(noticeHistorySorted().filter(h => String(h.id) !== item.id))
+    .slice(0, NOTICE_HISTORY_MAX);
+}
 
 function renderNotice() {
   const n = data.notice;
   const text = n && n.text ? String(n.text) : '';
+  const hiddenId = noticeHiddenId();
+  const dismissed = !!text && !!hiddenId && hiddenId === String(n.id || '');
   const banner = $('noticeBanner');
   if (banner) {
-    banner.classList.toggle('hidden', !text);
+    banner.classList.toggle('hidden', !text || dismissed);
     if (text) {
       const textEl = $('noticeText');
       const timeEl = $('noticeTime');
@@ -1672,6 +1739,26 @@ function renderNotice() {
   }
   const empty = $('noticeEmpty');
   if (empty) empty.classList.toggle('hidden', !!text || !isAdminUnlocked);
+  const histBtn = $('noticeHistoryBtn');
+  if (histBtn) {
+    const unread = !!text && String(n.id || '') !== String(chatStore(NOTICE_SEEN_KEY) || '');
+    histBtn.classList.toggle('has-new', unread);
+  }
+}
+function hideNoticeBanner() {
+  if (!data.notice) return;
+  const id = String(data.notice.id || '');
+  chatStore(NOTICE_HIDDEN_KEY, id);
+  chatStore(NOTICE_SEEN_KEY, id);   /* 닫았다는 건 읽었다는 뜻이라 알림 팝업도 다시 띄우지 않아요 */
+  renderNotice();
+  toast('공지를 닫았어요 · 📋 공지 내역에서 다시 볼 수 있어요', 'good');
+}
+function showNoticeBannerAgain() {
+  if (!data.notice) { closeModal(); return; }
+  chatStore(NOTICE_HIDDEN_KEY, '');
+  renderNotice();
+  closeModal();
+  toast('공지를 배너에 다시 띄웠어요', 'good');
 }
 function openNoticeEditor() {
   if (!isAdminUnlocked) { requireAdmin(); return; }
@@ -1700,7 +1787,9 @@ function saveNotice(text) {
   const t = String(text || '').trim().slice(0, 300);
   if (!t) { toast('공지 내용을 적어 주세요', 'warn'); return; }
   data.notice = { id: newId('nt'), text: t, updatedAt: Date.now() };
+  upsertNoticeHistory(data.notice);            /* 📋 공지 내역에도 함께 남겨요 */
   chatStore(NOTICE_SEEN_KEY, data.notice.id);   /* 내가 쓴 공지는 내 기기에서 팝업으로 또 뜨지 않게 */
+  chatStore(NOTICE_HIDDEN_KEY, '');             /* 새 공지는 닫아 둔 배너도 다시 보이게 */
   closeModal();
   renderNotice();
   save();
@@ -1713,6 +1802,68 @@ async function clearNotice() {
   renderNotice();
   save();
   toast('공지를 지웠어요', 'good');
+}
+
+/* ---------- 📋 공지 내역 (지난 공지 모아 보기) ---------- */
+function openNoticeHistory() {
+  if (document.querySelector('.modal-backdrop')) closeModal();
+  const root = $('modalRoot');
+  if (!root) return;
+  const items = noticeHistorySorted();
+  const cur = data.notice && data.notice.text ? data.notice : null;
+  if (cur && !items.some(h => String(h.id) === String(cur.id))) {
+    items.unshift({ id: String(cur.id), text: String(cur.text), createdAt: Number(cur.updatedAt) || 0 });
+  }
+  const hiddenId = noticeHiddenId();
+  const rows = items.length
+    ? items.map(h => {
+        const isCur = !!cur && String(cur.id) === String(h.id);
+        const canShowAgain = isCur && hiddenId === String(h.id);
+        const acts = (canShowAgain ? '<button class="mini nh-show" data-hist-show="1">배너에 표시</button>' : '') +
+          (isAdminUnlocked ? '<button class="icon-btn" data-hist-del="' + esc(h.id) + '" aria-label="공지 내역에서 지우기">✕</button>' : '');
+        return '<div class="nh-item' + (isCur ? ' cur' : '') + '">' +
+          '<div class="nh-top"><span class="nh-time">' + esc(noticeStamp(h.createdAt) || '날짜 없음') + '</span>' +
+            (isCur ? '<span class="nh-badge">현재 공지</span>' : '') +
+            (acts ? '<span class="nh-acts">' + acts + '</span>' : '') +
+          '</div>' +
+          '<p class="nh-text">' + esc(h.text) + '</p>' +
+        '</div>';
+      }).join('')
+    : '<p class="empty">아직 지난 공지가 없어요 🌿</p>';
+  root.innerHTML =
+    '<div class="modal-backdrop"><div class="modal notice-hist" role="dialog" aria-modal="true" aria-labelledby="noticeHistTitle">' +
+      '<h2 id="noticeHistTitle">📋 공지 내역</h2>' +
+      '<div class="modal-sub">가족 공지를 지난 것까지 모아 두었어요' + (items.length ? ' · ' + items.length + '개' : '') + '</div>' +
+      '<div class="nh-list">' + rows + '</div>' +
+      '<div class="modal-actions">' +
+        (isAdminUnlocked ? '<button class="btn primary" data-hist-write>✏️ 새 공지 쓰기</button>' : '') +
+        '<button class="btn" data-hist-close>닫기</button>' +
+      '</div>' +
+    '</div></div>';
+  const backdrop = root.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+}
+function applyNoticeHistoryDelete(id) {
+  const isCur = !!(data.notice && String(data.notice.id) === String(id));
+  data.noticeHistory = (data.noticeHistory || []).filter(h => String(h.id) !== String(id));
+  if (isCur) data.notice = null;
+  renderNotice();
+  save();
+  return isCur;
+}
+async function deleteNoticeHistoryItem(id) {
+  if (!isAdminUnlocked) { requireAdmin(); return; }
+  const item = noticeHistorySorted().find(h => String(h.id) === String(id));
+  if (!item) return;
+  const isCur = !!(data.notice && String(data.notice.id) === String(id));
+  closeModal();
+  const ok = await askConfirm(
+    isCur ? '지금 배너에 떠 있는 공지예요.\n내역에서 지우면 배너도 함께 내려가요. 지울까요?' : '이 공지를 내역에서 지울까요?',
+    '지우기', true);
+  if (!ok) { openNoticeHistory(); return; }
+  applyNoticeHistoryDelete(id);
+  openNoticeHistory();
+  toast(isCur ? '공지를 내렸어요' : '공지를 내역에서 지웠어요', 'good');
 }
 
 /* ============================================================
@@ -2963,6 +3114,12 @@ document.addEventListener('click', async e => {
   }
   if (t.id === 'noticeWriteBtn' || t.id === 'noticeEditBtn') { openNoticeEditor(); return; }
   if (t.id === 'noticeDeleteBtn') { clearNotice(); return; }
+  if (t.id === 'noticeHideBtn') { hideNoticeBanner(); return; }
+  if (t.id === 'noticeHistoryBtn') { openNoticeHistory(); return; }
+  if (t.dataset.histDel) { deleteNoticeHistoryItem(t.dataset.histDel); return; }
+  if (t.dataset.histShow) { showNoticeBannerAgain(); return; }
+  if (t.dataset.histWrite) { closeModal(); openNoticeEditor(); return; }
+  if (t.dataset.histClose) { closeModal(); return; }
   if (t.id === 'screensaverBtn') { openScreensaver(); return; }
   if (t.id === 'adminBtn') {
     if (isAdminUnlocked) { isAdminUnlocked = false; renderAdmin(); toast('🔒 설정을 잠갔어요', 'good'); }
