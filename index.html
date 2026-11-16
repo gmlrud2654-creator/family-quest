@@ -22,7 +22,7 @@
   --shadow-sm:0 3px 10px rgba(126,102,72,.06);
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
 body{
   min-height:100vh; color:var(--ink); font-family:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
   font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
@@ -82,12 +82,12 @@ select{
 }
 
 /* ---------------- shell ---------------- */
-.wrap{max-width:1580px; margin:0 auto; padding:12px 16px 34px}
+.wrap{max-width:1580px; width:100%; min-width:0; margin:0 auto; padding:12px 16px 34px}
+/* 상단바는 흐름 안에서 자연스럽게 늘어나고, 아래 카드 위로 겹치지 않는다 */
 .topbar{
-  display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:8px 4px 12px;
-  position:sticky; top:0; z-index:30;
+  display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; padding:8px 4px 12px;
+  position:relative; top:auto; z-index:30; height:auto; min-height:0;
   background:linear-gradient(#fbf6ee 68%, rgba(251,246,238,0));
-  backdrop-filter:blur(8px);
 }
 .brand{display:flex; align-items:center; gap:11px; min-width:0; flex:1}
 .brand-mark{
@@ -97,7 +97,7 @@ select{
 .brand h1{font-size:19px; font-weight:900; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .brand-meta{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums}
 .brand-meta b{color:var(--ink2); font-weight:700}
-.top-actions{display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+.top-actions{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0}
 .pill-btn{
   border:1px solid var(--line); background:#fff; border-radius:12px; padding:8px 12px; font-size:12.5px; font-weight:700;
   color:var(--ink2); cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:.16s; white-space:nowrap;
@@ -121,12 +121,12 @@ select{
 }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-.board{display:grid; grid-template-columns:1.03fr 1fr 1fr .97fr; gap:12px; align-items:start}
+.board{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; align-items:start}
 .col{display:flex; flex-direction:column; gap:12px; min-width:0}
 
 .card{
   background:rgba(255,253,248,.94); border:1px solid var(--line); border-radius:22px; padding:14px;
-  box-shadow:var(--shadow);
+  box-shadow:var(--shadow); min-width:0;
 }
 .card h2{font-size:15px; font-weight:900; letter-spacing:-.01em}
 .card h3{font-size:13.5px; font-weight:900; color:var(--ink2)}
@@ -169,7 +169,7 @@ select{
 .cal-head h2{font-size:16px}
 .cal-nav{display:flex; gap:4px}
 .cal-nav .mini{padding:5px 8px; font-size:12.5px}
-.calendar{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-top:9px}
+.calendar{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; margin-top:9px}
 .dow{text-align:center; font-size:10.5px; font-weight:800; color:#ada496; padding-bottom:3px}
 .dow.sun{color:#d69aa6}
 .day{
@@ -220,8 +220,8 @@ select{
 .prep-line input:checked + span{text-decoration:line-through; color:#b3aa9c}
 .add-event{margin-top:8px; display:flex; flex-direction:column; gap:5px}
 .add-event input,.add-event select{font-size:12.5px; padding:7px 9px; border-radius:9px}
-.add-event .row2{display:flex; gap:5px}
-.add-event .row2>*{flex:1}
+.add-event .row2{display:flex; gap:5px; flex-wrap:wrap}
+.add-event .row2>*{flex:1 1 0; min-width:0}
 .add-event .btn{padding:8px; font-size:12.5px; margin-top:1px}
 
 .dday-list{display:flex; flex-direction:column; gap:6px}
@@ -276,7 +276,7 @@ select{
 .child-card.mint .xp-bar i{background:linear-gradient(90deg,#cfe6ad,#8ec49b)}
 .xp-txt{font-size:10px; color:var(--muted); margin-top:2px; text-align:right; font-variant-numeric:tabular-nums}
 
-.stats{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:9px 0 11px; position:relative; z-index:1}
+.stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:9px 0 11px; position:relative; z-index:1}
 .stat{background:rgba(255,255,255,.78); border:1px solid #f4ece0; border-radius:13px; padding:7px 8px; text-align:center}
 .stat b{display:block; font-size:15px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--ink)}
 .stat.main b{color:var(--acc-ink)}
@@ -326,7 +326,8 @@ select{
 
 /* ---------------- wishlist ---------------- */
 .wish-add{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
-.wish-add .line{display:flex; gap:5px}
+.wish-add .line{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.wish-add .line>*{min-width:0}
 .wish-add input{font-size:12.5px; padding:8px 10px; border-radius:10px}
 .wish-add select{width:78px; flex:0 0 auto; font-size:12px; padding:8px 20px 8px 8px; border-radius:10px}
 .wish-add .btn{flex:0 0 auto; padding:8px 11px; border-radius:10px; font-size:16px; line-height:1; font-weight:900;
@@ -362,7 +363,8 @@ select{
   border-radius:99px; padding:4px 10px; font-variant-numeric:tabular-nums; white-space:nowrap;
 }
 .shop-child{font-size:12.5px; padding:7px 10px; border-radius:10px; margin-bottom:8px; background:#fffdf9}
-.shop-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.shop-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px}
+.shop-grid>*{min-width:0}
 .reward{
   border:1px solid #f3e7d3; background:#fff; border-radius:14px; padding:9px 7px 7px; text-align:center;
   cursor:pointer; transition:.16s; display:flex; flex-direction:column; align-items:center; gap:2px;
@@ -371,7 +373,7 @@ select{
 .reward:hover:not(:disabled){transform:translateY(-2px); box-shadow:0 8px 18px rgba(180,145,95,.14); border-color:#ecd9b8; background:#fffdf6}
 .reward:active:not(:disabled){transform:scale(.98)}
 .reward .emoji{font-size:19px; line-height:1.1}
-.reward .r-name{font-size:11.5px; font-weight:800; color:var(--ink); line-height:1.25; word-break:keep-all}
+.reward .r-name{font-size:11.5px; font-weight:800; color:var(--ink); line-height:1.25; word-break:keep-all; overflow-wrap:anywhere}
 .reward .r-cost{font-size:10.5px; font-weight:900; color:#a8792f; font-variant-numeric:tabular-nums}
 .reward .r-go{font-size:9.5px; font-weight:800; color:#fff; background:#e6c084; border-radius:99px; padding:1px 8px; margin-top:2px}
 .reward:disabled{opacity:.55; cursor:not-allowed; background:#faf7f1}
@@ -393,7 +395,8 @@ select{
 }
 .reward-del:hover{background:#fdeef0}
 .reward-add{display:flex; flex-direction:column; gap:5px; margin-top:8px; padding-top:8px; border-top:1px dashed #f0e4cf}
-.reward-add .line{display:flex; gap:5px}
+.reward-add .line{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.reward-add .line>*{min-width:0}
 .reward-add input{font-size:12px; padding:7px 9px; border-radius:9px; background:#fffdf9}
 .reward-add #rewardEmoji{width:48px; flex:0 0 auto; text-align:center; font-size:15px; padding:6px 4px}
 .reward-add #rewardCost{width:78px; flex:0 0 auto; text-align:center; font-weight:800; color:#a8792f}
@@ -627,7 +630,7 @@ body.chat-open{overflow:hidden}
 .nb-head{display:flex; align-items:center; gap:7px; flex-wrap:wrap}
 .nb-head b{font-size:10.5px; font-weight:900; letter-spacing:.06em; color:#a8792f}
 .nb-time{font-size:9.5px; color:#b6a894; font-variant-numeric:tabular-nums}
-.nb-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; margin-top:3px; white-space:pre-wrap; word-break:keep-all}
+.nb-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; margin-top:3px; white-space:pre-wrap; word-break:keep-all; overflow-wrap:anywhere}
 .nb-tools{display:flex; gap:5px; flex:0 0 auto}
 body.admin-locked .nb-tools{display:none!important}
 .notice-empty{
@@ -640,13 +643,6 @@ body.admin-locked .notice-empty{display:none!important}
   border-radius:14px; border:1px solid #ecdfcd; background:#fffdf9; color:var(--ink); resize:vertical; min-height:96px;
 }
 .notice-input:focus{outline:2px solid #f3ddb6; outline-offset:1px; border-color:#eed9b6}
-.notice-pop{
-  display:flex; align-items:flex-start; gap:9px; margin-top:12px; padding:12px 13px; border-radius:16px;
-  background:linear-gradient(135deg,#fff6e4,#ffeef2); border:1px solid #f4e2c6;
-}
-.notice-pop .np-mark{font-size:18px; line-height:1.3}
-.notice-pop .np-text{font-size:13px; font-weight:800; color:var(--ink); line-height:1.6; white-space:pre-wrap; word-break:keep-all; margin:0}
-.notice-pop .np-time{display:block; font-size:9.5px; font-weight:700; color:#b6a894; margin-top:5px}
 /* 공지 닫기(모두에게 보이는 버튼) */
 .nb-close{
   flex:0 0 auto; width:24px; height:24px; border-radius:99px; border:1px solid #f0e2cb;
@@ -687,7 +683,8 @@ body.admin-locked .notice-empty{display:none!important}
 /* ---------------- 엄마·아빠 보너스 포인트 ---------------- */
 .manual-card{background:linear-gradient(180deg,#fffaf3,rgba(255,253,248,.95))}
 .manual-form{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
-.manual-form .manual-row{display:flex; gap:5px}
+.manual-form .manual-row{display:flex; gap:5px; flex-wrap:wrap; min-width:0}
+.manual-form .manual-row>*{min-width:0}
 .manual-form select{flex:1; font-size:12.5px; padding:8px 22px 8px 9px; border-radius:10px; background:#fffdf9}
 .manual-form input{font-size:12.5px; padding:8px 10px; border-radius:10px; background:#fffdf9}
 .manual-form #manualPoints{width:90px; flex:0 0 auto; text-align:center; font-weight:800; color:#a2701f}
@@ -772,8 +769,31 @@ body.admin-locked .manual{padding-right:8px}
 .ledger-pts.zero{color:#b3a894; font-size:10px}
 .ledger-note{font-size:10px; color:#b3a894; margin-top:10px; line-height:1.6; flex:0 0 auto}
 
-@media (max-width:1080px){
-  .board{grid-template-columns:1fr 1fr}
+/* ---- iPad 가로(900–1280px): 4열 그대로 + 상단바 컴팩트 ---- */
+@media (min-width:900px) and (max-width:1280px){
+  .board{gap:10px}
+  .col{gap:10px}
+  .topbar{gap:7px 10px; padding:7px 2px 10px}
+  .top-actions{gap:6px}
+  .pill-btn{padding:7px 10px; font-size:11.5px; border-radius:11px}
+  .brand h1{font-size:16.5px}
+  .brand-mark{width:40px; height:40px; border-radius:14px; font-size:19px}
+  .status{font-size:11px; padding:5px 9px}
+  .account-email{max-width:150px}
+}
+@media (min-width:900px) and (max-width:1200px){
+  .card{padding:11px; border-radius:19px}
+  .card h2{font-size:14px}
+  .card h3{font-size:12.5px}
+  .shop-grid{gap:5px}
+  .reward{padding:8px 6px 6px}
+  .reward .r-name{font-size:11px}
+  .reward .emoji{font-size:17px}
+  .wish-list{max-height:190px}
+  .history{max-height:110px}
+}
+@media (max-width:899px){
+  .board{grid-template-columns:1fr 1fr; gap:12px}
 }
 @media (max-width:720px){
   .board{grid-template-columns:1fr}
@@ -783,10 +803,6 @@ body.admin-locked .manual{padding-right:8px}
   .card{border-radius:18px; padding:12px}
   .topbar{gap:8px}
   .top-actions{width:100%; justify-content:flex-start}
-}
-@media (min-width:1081px) and (max-width:1240px){
-  .brand h1{font-size:16.5px}
-  .pill-btn{font-size:11.5px; padding:7px 10px}
 }
 @media (max-width:560px){
   .chat-backdrop{place-items:stretch; padding:0}
@@ -1867,8 +1883,9 @@ async function deleteNoticeHistoryItem(id) {
 }
 
 /* ============================================================
-   알림 팝업 (새 공지 · 오늘/내일 D-Day)
-   - D-Day는 하루에 한 번, 새 공지는 공지마다 한 번 보여줍니다
+   알림 팝업 (오늘/내일 D-Day)
+   - D-Day는 하루에 한 번만 보여줍니다
+   - 가족 공지는 팝업 대신 맨 위 📢 공지 배너로만 보여줍니다
    ============================================================ */
 const DDAY_SEEN_PREFIX = 'fq_dday_seen_';
 let reminderTimer = null;
@@ -1894,15 +1911,12 @@ function maybeShowReminders() {
   if (document.querySelector('.modal-backdrop')) { scheduleReminders(4000); return; }
 
   const today = todayKey();
-  const notice = data.notice && data.notice.text ? data.notice : null;
-  const noticeIsNew = !!notice && String(chatStore(NOTICE_SEEN_KEY) || '') !== String(notice.id || '');
   const ddaySeen = chatStore(ddaySeenKey()) === '1';
   const events = ddaySeen ? [] : (Array.isArray(data.events) ? data.events : [])
     .filter(e => e && e.id && e.title && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || '')));
   const todays = events.filter(e => daysBetween(today, e.date) === 0);
   const tomorrows = events.filter(e => daysBetween(today, e.date) === 1);
-  const hasDday = !!(todays.length || tomorrows.length);
-  if (!noticeIsNew && !hasDday) return;
+  if (!todays.length && !tomorrows.length) return;   /* 공지 팝업은 없앴어요 · D-Day만 알림 */
 
   const row = (e) => {
     const w = ddayWho(e.who);
@@ -1915,17 +1929,10 @@ function maybeShowReminders() {
   };
 
   let title = '🎉 오늘 D-Day!';
-  if (noticeIsNew) title = '📢 가족 공지가 도착했어요!';
-  else if (todays.length && tomorrows.length) title = '🎉 오늘도 내일도 특별한 날!';
+  if (todays.length && tomorrows.length) title = '🎉 오늘도 내일도 특별한 날!';
   else if (!todays.length) title = '⏰ 내일이 바로 그날!';
 
   let body = '<div class="modal-sub">' + esc(fullDate(today)) + ' · 잊지 않도록 미리 알려드려요 💛</div>';
-  if (noticeIsNew) {
-    body += '<div class="notice-pop"><span class="np-mark" aria-hidden="true">📢</span><div style="flex:1 1 auto;min-width:0">' +
-      '<p class="np-text">' + esc(notice.text) + '</p>' +
-      (notice.updatedAt ? '<span class="np-time">' + esc(shortStamp(notice.updatedAt)) + ' 올림</span>' : '') +
-    '</div></div>';
-  }
   if (todays.length) {
     body += '<div class="dday-pop-sec">🍀 오늘 (D-DAY)</div><div class="dday-pop-list">' + todays.map(row).join('') + '</div>';
   }
@@ -1933,8 +1940,7 @@ function maybeShowReminders() {
     body += '<div class="dday-pop-sec">⏰ 내일 (D-1)</div><div class="dday-pop-list">' + tomorrows.map(row).join('') + '</div>';
   }
 
-  if (hasDday) chatStore(ddaySeenKey(), '1');      /* D-Day는 오늘 한 번만 */
-  if (noticeIsNew) chatStore(NOTICE_SEEN_KEY, String(notice.id));  /* 새 공지는 이 기기에서 한 번만 */
+  chatStore(ddaySeenKey(), '1');      /* D-Day는 오늘 한 번만 */
   const root = $('modalRoot');
   root.innerHTML =
     '<div class="modal-backdrop"><div class="modal dday-pop" role="dialog" aria-modal="true" aria-labelledby="ddayPopTitle">' +
