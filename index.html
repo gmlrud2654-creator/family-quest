@@ -813,6 +813,12 @@ const DEX = [
 /* ============================================================
    상태 & 도우미
    ============================================================ */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
+const pad = (n) => String(n).padStart(2, '0');
+const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
 const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], customTasks: {}, customBonuses: {}, allClear: {} });
 let data = fresh();
 let uid = null;
@@ -823,12 +829,6 @@ let lastToday = todayKey();
 let writing = 0;
 let idleTimer = null;
 let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
-
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
-const pad = (n) => String(n).padStart(2, '0');
-const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 function todayKey() {
   const d = new Date();
