@@ -688,11 +688,19 @@ body.admin-locked .notice-empty{display:none!important}
 .manual-form select{flex:1; font-size:12.5px; padding:8px 22px 8px 9px; border-radius:10px; background:#fffdf9}
 .manual-form input{font-size:12.5px; padding:8px 10px; border-radius:10px; background:#fffdf9}
 .manual-form #manualPoints{width:90px; flex:0 0 auto; text-align:center; font-weight:800; color:#a2701f}
+.manual-form #manualSign{flex:0 0 auto; width:auto; font-weight:900; color:#7d5a2a; background:#fff6e6; border-color:#f0dcb8}
+.manual-form #manualSign.minus{color:#a5475f; background:#fdeef1; border-color:#f3d3da}
+.manual-form #manualReason{flex:1 1 auto; min-width:0}
+.manual-form #manualPoints.minus{color:#b7657c}
 .manual-form .btn{
   padding:9px; font-size:12.5px; border-radius:10px; border:0; font-weight:900; color:#5f3d23;
   background:linear-gradient(135deg,#ffe1b6,#f6bc8a); box-shadow:0 3px 10px rgba(230,170,120,.28);
 }
 .manual-form .btn:hover{box-shadow:0 6px 16px rgba(230,170,120,.34); transform:translateY(-1px)}
+.manual-form .btn.penalty{
+  color:#7d2f42; background:linear-gradient(135deg,#f9d3da,#f2aebd); box-shadow:0 3px 10px rgba(220,130,150,.28);
+}
+.manual-form .btn.penalty:hover{box-shadow:0 6px 16px rgba(220,130,150,.34)}
 .manual-lock-hint{display:none; font-size:11px; color:#b0a695; background:#fbf5ea; border:1px dashed #ecdcc4; border-radius:11px; padding:8px 10px; margin-bottom:9px; line-height:1.65}
 body.admin-locked .manual-lock-hint{display:block}
 body.admin-locked .manual-form{display:none!important}
@@ -708,7 +716,9 @@ body.admin-locked .manual{padding-right:8px}
 .manual-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto}
 .manual-who.나연{background:var(--pink-soft); color:#a8617a}
 .manual-who.가빈{background:var(--mint-soft); color:#4a7856}
-.manual-pts{font-size:11px; font-weight:900; color:#c07a2c; flex:0 0 auto; font-variant-numeric:tabular-nums}
+.manual-pts{font-size:11px; font-weight:900; color:#c07a2c; flex:0 0 auto; font-variant-numeric:tabular-nums; white-space:nowrap}
+.manual-pts.minus{color:#b7657c}
+.manual.penalty{background:#fdf3f4; border-color:#f6dfe3}
 .manual .icon-btn{width:18px; height:18px; font-size:11px}
 
 /* ---------------- 내가 한 일 메모 (아이 스스로 추가) ---------------- */
@@ -757,6 +767,8 @@ body.admin-locked .manual{padding-right:8px}
 .ledger-sub{margin-left:auto; display:inline-flex; gap:6px; font-size:10.5px; font-weight:900; font-variant-numeric:tabular-nums; font-style:normal}
 .ledger-sub .earn{color:#4b7350; font-style:normal}
 .ledger-sub .spend{color:#b7657c; font-style:normal}
+.ledger-sub .penalty{color:#b7657c; font-style:normal}
+.ledger-row.penalty{background:#fdf4f5; border-color:#f6e2e6}
 .ledger-row{display:flex; align-items:center; gap:6px; padding:5px 7px; border-radius:9px; background:#fcf8f1; border:1px solid #f7efe3}
 .ledger-row + .ledger-row{margin-top:3px}
 .ledger-ico{font-size:11px; flex:0 0 auto}
@@ -1132,10 +1144,13 @@ body.admin-locked .manual{padding-right:8px}
         <p class="manual-lock-hint">🔒 엄마·아빠가 <b>설정 잠금</b>을 풀면 아이에게 보너스 포인트를 줄 수 있어요.</p>
         <div class="manual-form">
           <div class="manual-row">
-            <select id="manualChild" aria-label="보너스 받을 아이"><option value="nayeon">🐰 나연</option><option value="gabin">🐿️ 가빈</option></select>
-            <input id="manualPoints" type="number" inputmode="numeric" min="1" max="100000" step="10" value="50" aria-label="보너스 포인트">
+            <select id="manualChild" aria-label="포인트 받을 아이"><option value="nayeon">🐰 나연</option><option value="gabin">🐿️ 가빈</option></select>
+            <select id="manualSign" aria-label="보너스 또는 벌점"><option value="plus">➕ 보너스</option><option value="minus">➖ 벌점</option></select>
           </div>
-          <input id="manualReason" maxlength="60" placeholder="이유 (예: 방 청소 잘함)" aria-label="보너스 이유">
+          <div class="manual-row">
+            <input id="manualPoints" type="number" inputmode="numeric" min="1" max="100000" step="10" value="50" aria-label="포인트 (숫자)">
+            <input id="manualReason" maxlength="60" placeholder="이유 (예: 방 청소 잘함 / 장난감 안 치움)" aria-label="이유">
+          </div>
           <button class="btn" id="manualAddBtn">💝 보너스 주기</button>
         </div>
         <div class="manual-list" id="manualList"></div>
@@ -1451,7 +1466,7 @@ function balance(child) {
   return Math.max(0, totalEarned(child) - totalSpent(child));
 }
 function levelInfo(child) {
-  const total = totalEarned(child);
+  const total = Math.max(0, totalEarned(child));   /* 벌점으로 마이너스가 되어도 레벨은 1 이상 */
   const lv = Math.floor(total / 100) + 1;
   return { lv: lv, xp: total % 100, total: total, next: lv * 100 };
 }
@@ -1644,16 +1659,19 @@ function renderManualPoints() {
   if (!listEl) return;
   const items = (data.manualPoints || []).slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if ($('manualCount')) {
-    $('manualCount').textContent = items.length + '개 · ' + fmt(items.reduce((n, p) => n + (Number(p.points) || 0), 0)) + 'P';
+    const sum = items.reduce((n, p) => n + (Number(p.points) || 0), 0);
+    $('manualCount').textContent = items.length + '개 · ' + (sum > 0 ? '+' : '') + fmt(sum) + 'P';
   }
   listEl.innerHTML = items.length
     ? items.map(p => {
         const c = CHILD[p.child] || CHILD.nayeon;
-        return '<div class="manual">' +
+        const pts = Number(p.points) || 0;
+        const neg = pts < 0;
+        return '<div class="manual' + (neg ? ' penalty' : '') + '">' +
           '<span class="manual-who ' + esc(c.name) + '">' + c.emoji + ' ' + esc(c.name) + '</span>' +
           '<span class="manual-main"><b>' + esc(p.name) + '</b><span>' + esc(shortStamp(p.createdAt) || '기록') + '</span></span>' +
-          '<span class="manual-pts">+' + fmt(p.points) + 'P</span>' +
-          '<button class="icon-btn" data-undo-manual="' + esc(p.id) + '" aria-label="보너스 기록 지우기">✕</button>' +
+          '<span class="manual-pts' + (neg ? ' minus' : '') + '">' + (neg ? '⚠️ 벌점 ' + fmt(pts) : '+' + fmt(pts)) + 'P</span>' +
+          '<button class="icon-btn" data-undo-manual="' + esc(p.id) + '" aria-label="' + (neg ? '벌점' : '보너스') + ' 기록 지우기">✕</button>' +
         '</div>';
       }).join('')
     : '<p class="empty">아직 보너스 포인트 기록이 없어요 💝</p>';
@@ -2513,13 +2531,14 @@ function ledgerKeyOf(ts) {
 }
 function ledgerEntries() {
   const map = {};
-  const add = (date, child, icon, label, points, order) => {
+  const add = (date, child, icon, label, points, order, kind) => {
     const d = typeof date === 'string' ? date : '';
     if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
-    if (!map[d]) map[d] = { date: d, items: [], earn: 0, spend: 0 };
+    if (!map[d]) map[d] = { date: d, items: [], earn: 0, spend: 0, penalty: 0 };
     const pts = Math.round(Number(points) || 0);
-    map[d].items.push({ child: child, icon: icon, label: label, points: pts, order: order });
-    if (pts > 0) map[d].earn += pts;
+    map[d].items.push({ child: child, icon: icon, label: label, points: pts, order: order, kind: kind || '' });
+    if (kind === 'penalty') map[d].penalty += -pts;      /* 벌점은 따로 모아 보여 줘요 */
+    else if (pts > 0) map[d].earn += pts;
     else if (pts < 0) map[d].spend += -pts;
   };
   CHILDREN.forEach(child => {
@@ -2547,11 +2566,13 @@ function ledgerEntries() {
     });
     (data.manualPoints || []).forEach(p => {
       if (p.child !== child) return;
-      add(ledgerKeyOf(p.createdAt), child, '💝', p.name, p.points, 5);
+      const pts = Number(p.points) || 0;
+      const neg = pts < 0;
+      add(ledgerKeyOf(p.createdAt), child, neg ? '⚠️' : '💝', neg ? '벌점 · ' + p.name : p.name, pts, 5, neg ? 'penalty' : '');
     });
     (data.redemptions || []).forEach(r => {
       if (r.child !== child) return;
-      add(r.date, child, '🛍️', r.name, -(Number(r.cost) || 0), 6);
+      add(r.date, child, '🛍️', r.name, -(Number(r.cost) || 0), 6, 'spend');
     });
   });
   return Object.keys(map).sort((a, b) => b.localeCompare(a)).map(k => map[k]);
@@ -2574,8 +2595,11 @@ function renderLedger() {
   const groups = ledgerEntries();
   const totalEarn = groups.reduce((n, g) => n + g.earn, 0);
   const totalSpend = groups.reduce((n, g) => n + g.spend, 0);
+  const totalPenalty = groups.reduce((n, g) => n + (g.penalty || 0), 0);
   const sum = $('ledgerSum');
-  if (sum) sum.innerHTML = '총 적립 <b>+' + fmt(totalEarn) + 'P</b> · 사용 <i>-' + fmt(totalSpend) + 'P</i>';
+  if (sum) sum.innerHTML = '총 적립 <b>+' + fmt(totalEarn) + 'P</b>' +
+    (totalPenalty ? ' · 벌점 <i>-' + fmt(totalPenalty) + 'P</i>' : '') +
+    ' · 사용 <i>-' + fmt(totalSpend) + 'P</i>';
   if (!groups.length) {
     box.innerHTML = '<p class="empty">아직 적립 내역이 없어요 🌱<br>퀘스트를 끝내면 여기에 차곡차곡 쌓여요</p>';
     return;
@@ -2584,7 +2608,7 @@ function renderLedger() {
     const rows = g.items.slice().sort((a, b) => a.order - b.order).map(it => {
       const c = CHILD[it.child];
       const pts = it.points > 0 ? '+' + fmt(it.points) + 'P' : (it.points < 0 ? '-' + fmt(Math.abs(it.points)) + 'P' : '달성');
-      return '<div class="ledger-row">' +
+      return '<div class="ledger-row' + (it.kind === 'penalty' ? ' penalty' : '') + '">' +
         '<span class="ledger-ico" aria-hidden="true">' + it.icon + '</span>' +
         (ledgerFilter === 'all' ? '<span class="ledger-who ' + esc(c.name) + '">' + c.emoji + '</span>' : '') +
         '<span class="ledger-name">' + esc(it.label) + '</span>' +
@@ -2594,6 +2618,7 @@ function renderLedger() {
     return '<div class="ledger-day">' +
       '<div class="ledger-day-head"><b>' + esc(g.date ? fullDate(g.date) : '날짜 미상') + '</b>' +
         '<span class="ledger-sub"><span class="earn">+' + fmt(g.earn) + 'P</span>' +
+          (g.penalty ? '<span class="penalty">벌점 -' + fmt(g.penalty) + 'P</span>' : '') +
           (g.spend ? '<span class="spend">-' + fmt(g.spend) + 'P</span>' : '') +
         '</span></div>' +
       rows +
@@ -2829,7 +2854,28 @@ async function delWish(id) {
   save();
 }
 
-/* 엄마·아빠가 직접 주는 보너스 포인트 */
+/* 엄마·아빠가 직접 주는 보너스 포인트 (+ 보너스 / - 벌점) */
+function manualSignMode() {
+  const el = $('manualSign');
+  return el && el.value === 'minus' ? 'minus' : 'plus';
+}
+function syncManualSignUI() {
+  const minus = manualSignMode() === 'minus';
+  const sel = $('manualSign');
+  if (sel) sel.classList.toggle('minus', minus);
+  const pts = $('manualPoints');
+  if (pts) {
+    pts.classList.toggle('minus', minus);
+    pts.setAttribute('aria-label', minus ? '벌점 (숫자)' : '보너스 포인트 (숫자)');
+  }
+  const btn = $('manualAddBtn');
+  if (btn) {
+    btn.classList.toggle('penalty', minus);
+    btn.textContent = minus ? '⚠️ 벌점 주기' : '💝 보너스 주기';
+  }
+  const reason = $('manualReason');
+  if (reason) reason.placeholder = minus ? '이유 (예: 장난감 안 치움)' : '이유 (예: 방 청소 잘함)';
+}
 function giveManualPoints() {
   if (!requireAdmin()) return;
   const childSel = $('manualChild');
@@ -2837,16 +2883,23 @@ function giveManualPoints() {
   const reasonEl = $('manualReason');
   const child = childSel.value;
   const name = (reasonEl.value || '').trim();
-  const points = Math.round(Number(pointsEl.value));
-  if (!name) { toast('보너스 이유를 적어 주세요 ✏️', 'warn'); reasonEl.focus(); return; }
-  if (!Number.isFinite(points) || points <= 0) { toast('포인트는 1점 이상 숫자로 입력해 주세요', 'warn'); pointsEl.focus(); return; }
-  if (points > 100000) { toast('한 번에 100,000P까지 줄 수 있어요', 'warn'); pointsEl.focus(); return; }
+  const raw = Math.round(Number(pointsEl.value));
+  /* -50 처럼 마이너스로 적어도, 벌점 선택이면 둘 다 벌점으로 처리해요 */
+  const minus = manualSignMode() === 'minus' || raw < 0;
+  const abs = Math.abs(Number.isFinite(raw) ? raw : 0);
+  const points = minus ? -abs : abs;
+  if (!name) { toast((minus ? '벌점' : '보너스') + ' 이유를 적어 주세요 ✏️', 'warn'); reasonEl.focus(); return; }
+  if (!Number.isFinite(raw) || abs < 1) { toast('포인트는 1점 이상 숫자로 입력해 주세요', 'warn'); pointsEl.focus(); return; }
+  if (abs > 100000) { toast('한 번에 100,000P까지 줄 수 있어요', 'warn'); pointsEl.focus(); return; }
   if (!Array.isArray(data.manualPoints)) data.manualPoints = [];
   data.manualPoints.push({ id: newId('mp'), child: child, name: name, points: points, createdAt: Date.now() });
   reasonEl.value = '';
   renderAll();
   save();
-  toast('💝 ' + CHILD[child].emoji + ' ' + CHILD[child].name + ' +' + fmt(points) + 'P · ' + name, 'good');
+  const who = CHILD[child].emoji + ' ' + CHILD[child].name;
+  toast(minus
+    ? '⚠️ ' + who + ' 벌점 ' + fmt(points) + 'P · ' + name
+    : '💝 ' + who + ' +' + fmt(points) + 'P · ' + name, 'good');
 }
 
 async function undoManualPoints(id) {
@@ -2854,11 +2907,13 @@ async function undoManualPoints(id) {
   const p = (data.manualPoints || []).find(x => x.id === id);
   if (!p) return;
   const c = CHILD[p.child] || CHILD.nayeon;
-  if (!(await askConfirm(c.emoji + ' ' + c.name + '에게 준 ' + fmt(p.points) + 'P 기록을 지울까요?\n"' + p.name + '"\n포인트도 함께 사라져요.', '지우기', true))) return;
+  const pts = Number(p.points) || 0;
+  const what = pts < 0 ? '벌점 ' + fmt(pts) + 'P' : '보너스 +' + fmt(pts) + 'P';
+  if (!(await askConfirm(c.emoji + ' ' + c.name + ' ' + what + ' 기록을 지울까요?\n"' + p.name + '"\n포인트도 함께 사라져요.', '지우기', true))) return;
   data.manualPoints = data.manualPoints.filter(x => x.id !== id);
   renderAll();
   save();
-  toast('보너스 기록을 지웠어요', 'good');
+  toast((pts < 0 ? '벌점' : '보너스') + ' 기록을 지웠어요', 'good');
 }
 
 /* 보상 상점 직접 편집 (관리자 전용) */
@@ -3138,6 +3193,8 @@ document.addEventListener('click', async e => {
 });
 
 $('shopChild').addEventListener('change', renderShop);
+if ($('manualSign')) $('manualSign').addEventListener('change', syncManualSignUI);
+syncManualSignUI();
 $('screensaver').addEventListener('click', closeScreensaver);
 $('wishName').addEventListener('keydown', e => { if (e.key === 'Enter') addWish(); });
 $('manualReason').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); giveManualPoints(); } });
