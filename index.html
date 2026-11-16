@@ -360,7 +360,7 @@ select{
 .reward{
   border:1px solid #f3e7d3; background:#fff; border-radius:14px; padding:9px 7px 7px; text-align:center;
   cursor:pointer; transition:.16s; display:flex; flex-direction:column; align-items:center; gap:2px;
-  box-shadow:0 2px 6px rgba(170,140,90,.05); font-family:inherit;
+  box-shadow:0 2px 6px rgba(170,140,90,.05); font-family:inherit; width:100%; height:100%;
 }
 .reward:hover:not(:disabled){transform:translateY(-2px); box-shadow:0 8px 18px rgba(180,145,95,.14); border-color:#ecd9b8; background:#fffdf6}
 .reward:active:not(:disabled){transform:scale(.98)}
@@ -377,6 +377,23 @@ select{
 .hist b{font-weight:800; color:var(--ink2)}
 .hist .h-cost{color:#a8792f; font-weight:900; font-variant-numeric:tabular-nums; font-size:10.5px; white-space:nowrap}
 .hist .icon-btn{width:18px; height:18px; font-size:12px}
+
+/* 보상 직접 편집(관리자 모드) */
+.reward-wrap{position:relative; display:flex; min-width:0}
+.reward-del{
+  position:absolute; top:-5px; right:-5px; width:20px; height:20px; border-radius:99px; z-index:2;
+  border:1px solid #f2d8de; background:#fff; color:#c27a86; font-size:10px; font-weight:900; line-height:1;
+  cursor:pointer; display:grid; place-items:center; box-shadow:0 2px 6px rgba(180,130,140,.2);
+}
+.reward-del:hover{background:#fdeef0}
+.reward-add{display:flex; flex-direction:column; gap:5px; margin-top:8px; padding-top:8px; border-top:1px dashed #f0e4cf}
+.reward-add .line{display:flex; gap:5px}
+.reward-add input{font-size:12px; padding:7px 9px; border-radius:9px; background:#fffdf9}
+.reward-add #rewardEmoji{width:48px; flex:0 0 auto; text-align:center; font-size:15px; padding:6px 4px}
+.reward-add #rewardCost{width:78px; flex:0 0 auto; text-align:center; font-weight:800; color:#a8792f}
+.reward-add .btn{padding:8px; font-size:12px; border-radius:10px}
+body.admin-locked .reward-del,
+body.admin-locked .reward-add{display:none!important}
 
 /* ---------------- notice ---------------- */
 .notice{
@@ -633,6 +650,41 @@ body.admin-locked .manual{padding-right:8px}
 .memo-add:active{transform:scale(.94)}
 .child-card.mint .memo-add{background:linear-gradient(135deg,#8fc09b,#6c9f7a); box-shadow:0 3px 9px rgba(110,160,125,.28)}
 
+/* ---------------- 적립 내역 ---------------- */
+.ledger-modal{max-width:540px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden}
+.ledger-tabs{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; flex:0 0 auto}
+.ledger-tab{
+  border:1px solid var(--line); background:#fff; border-radius:99px; padding:6px 12px; font-size:12px;
+  font-weight:800; color:var(--ink2); cursor:pointer; transition:.15s; white-space:nowrap;
+}
+.ledger-tab:hover{background:#fffaf2}
+.ledger-tab.on{
+  background:linear-gradient(135deg,#57544c,#3f3d36); color:#fff; border-color:transparent;
+  box-shadow:0 3px 10px rgba(63,61,54,.18);
+}
+.ledger-sum{font-size:11px; color:var(--muted); margin-top:8px; font-weight:700; flex:0 0 auto; font-variant-numeric:tabular-nums}
+.ledger-sum b{color:#4b7350}
+.ledger-sum i{color:#b7657c; font-style:normal}
+.ledger-list{flex:1 1 auto; min-height:0; overflow-y:auto; margin-top:8px; padding-right:3px}
+.ledger-day{border-top:1px dashed #eee3d3; padding-top:8px; margin-top:9px}
+.ledger-day:first-child{border-top:0; margin-top:2px; padding-top:0}
+.ledger-day-head{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px}
+.ledger-day-head b{font-size:12px; font-weight:900; color:var(--ink2); font-variant-numeric:tabular-nums}
+.ledger-sub{margin-left:auto; display:inline-flex; gap:6px; font-size:10.5px; font-weight:900; font-variant-numeric:tabular-nums; font-style:normal}
+.ledger-sub .earn{color:#4b7350; font-style:normal}
+.ledger-sub .spend{color:#b7657c; font-style:normal}
+.ledger-row{display:flex; align-items:center; gap:6px; padding:5px 7px; border-radius:9px; background:#fcf8f1; border:1px solid #f7efe3}
+.ledger-row + .ledger-row{margin-top:3px}
+.ledger-ico{font-size:11px; flex:0 0 auto}
+.ledger-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto}
+.ledger-who.나연{background:var(--pink-soft); color:#a8617a}
+.ledger-who.가빈{background:var(--mint-soft); color:#4a7856}
+.ledger-name{flex:1; min-width:0; font-size:12px; font-weight:600; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ledger-pts{font-size:11px; font-weight:900; color:#4b7350; flex:0 0 auto; font-variant-numeric:tabular-nums}
+.ledger-pts.minus{color:#b7657c}
+.ledger-pts.zero{color:#b3a894; font-size:10px}
+.ledger-note{font-size:10px; color:#b3a894; margin-top:10px; line-height:1.6; flex:0 0 auto}
+
 @media (max-width:1080px){
   .board{grid-template-columns:1fr 1fr}
 }
@@ -691,6 +743,7 @@ body.admin-locked .manual{padding-right:8px}
       <span class="status" id="syncStatus">연결 확인 중</span>
       <span class="account-email hidden" id="accountEmail"></span>
       <button class="pill-btn chat" id="chatBtn" aria-label="가족 채팅방 열기"><span aria-hidden="true">💬</span> 가족 채팅<span class="chat-badge hidden" id="chatBadge">0</span></button>
+      <button class="pill-btn" id="ledgerBtn">📊 적립 내역</button>
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
       <button class="pill-btn hidden" id="changePinBtn">🔑 PIN 변경</button>
@@ -934,6 +987,14 @@ body.admin-locked .manual{padding-right:8px}
           <option value="nayeon">🐰 나연</option><option value="gabin">🐿️ 가빈</option>
         </select>
         <div class="shop-grid" id="rewards"></div>
+        <div class="reward-add">
+          <div class="line">
+            <input id="rewardEmoji" maxlength="4" placeholder="🍭" aria-label="보상 아이콘">
+            <input id="rewardName" maxlength="24" placeholder="새 보상 이름 (예: 치킨)" aria-label="보상 이름">
+            <input id="rewardCost" type="number" min="1" max="100000" step="50" value="300" aria-label="필요 포인트">
+          </div>
+          <button class="btn" id="rewardAddBtn">➕ 보상 추가</button>
+        </div>
         <div class="history-title">교환 기록</div>
         <div class="history" id="redemptionHistory"></div>
       </div>
@@ -1148,6 +1209,16 @@ function normalize() {
     }))
     .sort((a, b) => a.createdAt - b.createdAt)
     .slice(-200) : [];
+  data.customRewards = Array.isArray(data.customRewards) ? data.customRewards
+    .filter(r => r && r.id && r.name && Number(r.cost) > 0)
+    .map(r => ({
+      id: String(r.id),
+      name: String(r.name).slice(0, 24),
+      cost: Math.round(Number(r.cost)),
+      emoji: String(r.emoji || '🎁').slice(0, 8)
+    }))
+    .slice(0, 30)
+    : REWARDS.map(r => ({ id: r.id, name: r.name, cost: r.cost, emoji: r.emoji }));
   Object.keys(data.daily).forEach(date => {
     const day = data.daily[date];
     if (!day || typeof day !== 'object') { delete data.daily[date]; return; }
@@ -1353,19 +1424,27 @@ function renderMemosAll() { CHILDREN.forEach(renderMemos); }
 
 function renderChildren() { CHILDREN.forEach(renderChild); }
 
+function rewardList() {
+  return Array.isArray(data.customRewards) ? data.customRewards : REWARDS;
+}
+
 function renderShop() {
   const child = $('shopChild').value;
   const bal = balance(child);
   $('shopBalance').textContent = CHILD[child].emoji + ' ' + CHILD[child].name + ' · ' + fmt(bal) + 'P';
-  $('rewards').innerHTML = REWARDS.map(r => {
+  const list = rewardList();
+  $('rewards').innerHTML = list.length ? list.map(r => {
     const can = bal >= r.cost;
-    return '<button class="reward" data-reward="' + r.id + '" data-child="' + child + '"' + (can ? '' : ' disabled') + '>' +
-      '<span class="emoji">' + r.emoji + '</span>' +
-      '<span class="r-name">' + esc(r.name) + '</span>' +
-      '<span class="r-cost">' + fmt(r.cost) + 'P</span>' +
-      '<span class="r-go">' + (can ? '교환' : '부족') + '</span>' +
-      '</button>';
-  }).join('');
+    return '<div class="reward-wrap">' +
+      '<button class="reward" data-reward="' + esc(r.id) + '" data-child="' + child + '"' + (can ? '' : ' disabled') + '>' +
+        '<span class="emoji">' + esc(r.emoji) + '</span>' +
+        '<span class="r-name">' + esc(r.name) + '</span>' +
+        '<span class="r-cost">' + fmt(r.cost) + 'P</span>' +
+        '<span class="r-go">' + (can ? '교환' : '부족') + '</span>' +
+      '</button>' +
+      '<button class="reward-del" data-del-reward="' + esc(r.id) + '" aria-label="' + esc(r.name) + ' 보상 삭제">✕</button>' +
+    '</div>';
+  }).join('') : '<p class="empty" style="grid-column:1/-1">보상이 없어요. 관리자 모드에서 추가해 보세요 🎁</p>';
   const items = data.redemptions.slice().reverse();
   $('redemptionHistory').innerHTML = items.length
     ? items.map(r => '<div class="hist">' +
@@ -1497,6 +1576,7 @@ function renderAll() {
   renderDday();
   if (!$('dayPanel').classList.contains('hidden')) renderDayPanel();
   syncChat();
+  syncLedgerIfOpen();
 }
 
 /* ============================================================
@@ -1886,6 +1966,137 @@ function bindChat() {
 }
 
 /* ============================================================
+   적립 내역 (날짜별 모아보기)
+   ============================================================ */
+let ledgerFilter = 'all';
+
+function ledgerKeyOf(ts) {
+  const n = Number(ts) || 0;
+  return n ? keyOf(new Date(n)) : '';
+}
+function ledgerEntries() {
+  const map = {};
+  const add = (date, child, icon, label, points, order) => {
+    const d = typeof date === 'string' ? date : '';
+    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    if (!map[d]) map[d] = { date: d, items: [], earn: 0, spend: 0 };
+    const pts = Math.round(Number(points) || 0);
+    map[d].items.push({ child: child, icon: icon, label: label, points: pts, order: order });
+    if (pts > 0) map[d].earn += pts;
+    else if (pts < 0) map[d].spend += -pts;
+  };
+  CHILDREN.forEach(child => {
+    if (ledgerFilter !== 'all' && ledgerFilter !== child) return;
+    const tlist = taskList(child);
+    const blist = bonusList(child);
+    Object.keys(data.daily || {}).forEach(date => {
+      const r = data.daily[date] && data.daily[date][child];
+      if (!r) return;
+      (r.tasks || []).forEach(e => {
+        const q = tlist.find(x => x.id === e.id);
+        add(date, child, '⭐', q ? q.name : '퀘스트', e.points, 1);
+      });
+      (r.bonuses || []).forEach(e => {
+        const q = blist.find(x => x.id === e.id);
+        add(date, child, '🎁', q ? q.name : '보너스 미션', e.points, 2);
+      });
+      (r.selfMemos || []).forEach(m => {
+        add(date, child, '✏️', m.text, m.points, 3);
+      });
+    });
+    const ac = (data.allClear && data.allClear[child]) || {};
+    Object.keys(ac).forEach(date => {
+      if (ac[date]) add(date, child, '🌟', '올클리어!', 0, 4);
+    });
+    (data.manualPoints || []).forEach(p => {
+      if (p.child !== child) return;
+      add(ledgerKeyOf(p.createdAt), child, '💝', p.name, p.points, 5);
+    });
+    (data.redemptions || []).forEach(r => {
+      if (r.child !== child) return;
+      add(r.date, child, '🛍️', r.name, -(Number(r.cost) || 0), 6);
+    });
+  });
+  return Object.keys(map).sort((a, b) => b.localeCompare(a)).map(k => map[k]);
+}
+function renderLedgerTabs() {
+  const box = $('ledgerTabs');
+  if (!box) return;
+  const opts = [
+    { k: 'all', label: '전체' },
+    { k: 'nayeon', label: '🐰 나연' },
+    { k: 'gabin', label: '🐿️ 가빈' }
+  ];
+  box.innerHTML = opts.map(o =>
+    '<button class="ledger-tab' + (ledgerFilter === o.k ? ' on' : '') + '" data-ledger="' + o.k + '" aria-pressed="' + (ledgerFilter === o.k ? 'true' : 'false') + '">' + o.label + '</button>'
+  ).join('');
+}
+function renderLedger() {
+  const box = $('ledgerList');
+  if (!box) return;
+  const groups = ledgerEntries();
+  const totalEarn = groups.reduce((n, g) => n + g.earn, 0);
+  const totalSpend = groups.reduce((n, g) => n + g.spend, 0);
+  const sum = $('ledgerSum');
+  if (sum) sum.innerHTML = '총 적립 <b>+' + fmt(totalEarn) + 'P</b> · 사용 <i>-' + fmt(totalSpend) + 'P</i>';
+  if (!groups.length) {
+    box.innerHTML = '<p class="empty">아직 적립 내역이 없어요 🌱<br>퀘스트를 끝내면 여기에 차곡차곡 쌓여요</p>';
+    return;
+  }
+  box.innerHTML = groups.map(g => {
+    const rows = g.items.slice().sort((a, b) => a.order - b.order).map(it => {
+      const c = CHILD[it.child];
+      const pts = it.points > 0 ? '+' + fmt(it.points) + 'P' : (it.points < 0 ? '-' + fmt(Math.abs(it.points)) + 'P' : '달성');
+      return '<div class="ledger-row">' +
+        '<span class="ledger-ico" aria-hidden="true">' + it.icon + '</span>' +
+        (ledgerFilter === 'all' ? '<span class="ledger-who ' + esc(c.name) + '">' + c.emoji + '</span>' : '') +
+        '<span class="ledger-name">' + esc(it.label) + '</span>' +
+        '<span class="ledger-pts' + (it.points < 0 ? ' minus' : (it.points === 0 ? ' zero' : '')) + '">' + pts + '</span>' +
+      '</div>';
+    }).join('');
+    return '<div class="ledger-day">' +
+      '<div class="ledger-day-head"><b>' + esc(g.date ? fullDate(g.date) : '날짜 미상') + '</b>' +
+        '<span class="ledger-sub"><span class="earn">+' + fmt(g.earn) + 'P</span>' +
+          (g.spend ? '<span class="spend">-' + fmt(g.spend) + 'P</span>' : '') +
+        '</span></div>' +
+      rows +
+    '</div>';
+  }).join('');
+}
+function openLedger() {
+  $('modalRoot').innerHTML =
+    '<div class="modal-backdrop"><div class="modal ledger-modal" role="dialog" aria-modal="true">' +
+      '<h2>📊 적립 내역</h2>' +
+      '<div class="modal-sub">날짜별로 모은 포인트와 쓴 포인트예요</div>' +
+      '<div class="ledger-tabs" id="ledgerTabs"></div>' +
+      '<p class="ledger-sum" id="ledgerSum"></p>' +
+      '<div class="ledger-list" id="ledgerList"></div>' +
+      '<p class="ledger-note">🌟 올클리어는 도감 친구만 열리고 포인트는 따로 붙지 않아요.</p>' +
+      '<div class="modal-actions"><button class="btn" data-modal-close>닫기</button></div>' +
+    '</div></div>';
+  const root = $('modalRoot');
+  root.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+  const backdrop = root.querySelector('.modal-backdrop');
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+  $('ledgerTabs').addEventListener('click', e => {
+    const tab = e.target.closest('[data-ledger]');
+    if (!tab) return;
+    ledgerFilter = tab.dataset.ledger;
+    renderLedgerTabs();
+    renderLedger();
+  });
+  renderLedgerTabs();
+  renderLedger();
+}
+function syncLedgerIfOpen() {
+  const box = $('ledgerList');
+  if (!box) return;
+  const st = box.scrollTop;
+  renderLedger();
+  box.scrollTop = st;
+}
+
+/* ============================================================
    동작
    ============================================================ */
 function markAllClear(child) {
@@ -2016,7 +2227,7 @@ async function resetDay(child) {
 }
 
 async function redeemReward(child, rewardId) {
-  const r = REWARDS.find(x => x.id === rewardId);
+  const r = rewardList().find(x => x.id === rewardId);
   if (!r) return;
   const bal = balance(child);
   if (bal < r.cost) {
@@ -2111,6 +2322,38 @@ async function undoManualPoints(id) {
   renderAll();
   save();
   toast('보너스 기록을 지웠어요', 'good');
+}
+
+/* 보상 상점 직접 편집 (관리자 전용) */
+function addReward() {
+  if (!requireAdmin()) return;
+  const nameEl = $('rewardName');
+  const costEl = $('rewardCost');
+  const emojiEl = $('rewardEmoji');
+  const name = (nameEl.value || '').trim();
+  const cost = Math.round(Number(costEl.value));
+  const emoji = (emojiEl.value || '').trim() || '🎁';
+  if (!name) { toast('보상 이름을 적어 주세요 🎁', 'warn'); nameEl.focus(); return; }
+  if (!Number.isFinite(cost) || cost <= 0) { toast('필요 포인트를 1P 이상으로 입력해 주세요', 'warn'); costEl.focus(); return; }
+  if (cost > 100000) { toast('필요 포인트는 100,000P까지 입력할 수 있어요', 'warn'); costEl.focus(); return; }
+  if (rewardList().some(r => r.name === name)) { toast('이미 있는 보상이에요', 'warn'); return; }
+  data.customRewards = rewardList().concat([{ id: newId('rw'), name: name, cost: cost, emoji: emoji }]);
+  nameEl.value = '';
+  emojiEl.value = '';
+  renderShop();
+  save();
+  toast('🎁 ' + emoji + ' ' + name + ' (' + fmt(cost) + 'P) 추가!', 'good');
+}
+
+async function delReward(id) {
+  if (!requireAdmin()) return;
+  const r = rewardList().find(x => x.id === id);
+  if (!r) return;
+  if (!(await askConfirm("'" + r.name + "' 보상을 상점에서 뺄까요?\n이미 교환한 기록은 그대로 남아요.", '빼기', true))) return;
+  data.customRewards = rewardList().filter(x => x.id !== id);
+  renderShop();
+  save();
+  toast('보상 목록에서 뺐어요', 'good');
 }
 
 function openDay(key) {
@@ -2328,6 +2571,9 @@ document.addEventListener('click', async e => {
   if (t.id === 'wishAddBtn') { addWish(); return; }
   if (t.id === 'manualAddBtn') { giveManualPoints(); return; }
   if (t.dataset.undoManual) { undoManualPoints(t.dataset.undoManual); return; }
+  if (t.id === 'rewardAddBtn') { addReward(); return; }
+  if (t.dataset.delReward) { delReward(t.dataset.delReward); return; }
+  if (t.id === 'ledgerBtn') { openLedger(); return; }
   if (t.id === 'shopJumpBtn') {
     $('shopCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
     $('shopCard').animate(
@@ -2350,6 +2596,10 @@ $('screensaver').addEventListener('click', closeScreensaver);
 $('wishName').addEventListener('keydown', e => { if (e.key === 'Enter') addWish(); });
 $('manualReason').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); giveManualPoints(); } });
 $('manualPoints').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); giveManualPoints(); } });
+['rewardName', 'rewardCost'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addReward(); } });
+});
 CHILDREN.forEach(c => {
   const inp = document.querySelector('[data-memo-input="' + c + '"]');
   if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addMemo(c); } });
