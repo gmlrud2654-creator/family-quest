@@ -826,6 +826,74 @@ body.admin-locked .manual{padding-right:8px}
 .ledger-pts.zero{color:#b3a894; font-size:10px}
 .ledger-note{font-size:10px; color:#b3a894; margin-top:10px; line-height:1.6; flex:0 0 auto}
 
+/* ---------------- ⏱️ 공부 타이머 ---------------- */
+.study-modal{max-width:470px}
+.study-sec{font-size:10.5px; font-weight:900; color:var(--muted); letter-spacing:.05em; margin:13px 0 6px}
+.study-who{display:flex; gap:6px}
+.study-who button{
+  flex:1; border:1px solid var(--line); background:#fff; border-radius:13px; padding:10px 6px;
+  font-size:13px; font-weight:800; color:var(--ink2); cursor:pointer; transition:.15s;
+}
+.study-who button:hover{background:#fffaf2}
+.study-who button.on{background:linear-gradient(180deg,#fff6f9,#ffe9f0); border-color:#f6cfdb; color:#a8546e; box-shadow:0 3px 10px rgba(230,150,175,.15)}
+.study-who button:nth-child(2).on{background:linear-gradient(180deg,#f4fbf5,#e6f5e8); border-color:#c9e6cf; color:#43714f; box-shadow:0 3px 10px rgba(130,180,140,.15)}
+.study-subject input{width:100%; font-size:13px; padding:10px 11px; border-radius:11px; background:#fffdf9}
+.study-chips{display:flex; flex-wrap:wrap; gap:5px}
+.study-chip{
+  border:1px solid var(--line); background:#fff; border-radius:99px; padding:6px 11px; font-size:12px;
+  font-weight:700; color:var(--ink2); cursor:pointer; transition:.14s;
+}
+.study-chip:hover{background:#fffaf2}
+.study-chip.on{background:linear-gradient(135deg,#57544c,#3f3d36); color:#fff; border-color:transparent}
+.study-modes{display:flex; gap:4px; background:#f4eee3; border-radius:13px; padding:4px; margin-top:11px}
+.study-modes button{
+  flex:1; border:0; background:transparent; border-radius:10px; padding:9px 4px; font-size:12.5px;
+  font-weight:800; color:var(--muted); cursor:pointer; transition:.15s;
+}
+.study-modes button.on{background:#fff; color:var(--ink); box-shadow:0 2px 6px rgba(126,102,72,.12)}
+.study-clock{
+  margin-top:13px; text-align:center; font-size:46px; font-weight:900; line-height:1.05; color:var(--ink);
+  font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+}
+.study-clock.done{color:#4b7350}
+.study-bar{height:7px; border-radius:99px; background:#f1eade; overflow:hidden; margin-top:9px}
+.study-bar i{display:block; height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#ffd9a2,#f6a9bd); transition:width .35s linear}
+.study-hint{font-size:11px; color:var(--muted); text-align:center; margin-top:7px; min-height:16px}
+.study-controls{display:flex; gap:6px; margin-top:11px}
+.study-controls .btn{flex:1; padding:12px 8px; font-size:13.5px}
+.study-save{
+  width:100%; margin-top:6px; padding:12px 8px; font-size:13.5px; font-weight:900;
+  background:linear-gradient(135deg,#a99ad6,#8d7cc7); color:#fff; border-color:transparent;
+  box-shadow:0 5px 16px rgba(140,120,200,.24);
+}
+.study-save:hover{box-shadow:0 8px 22px rgba(140,120,200,.3)}
+.study-custom{display:flex; align-items:center; gap:5px; margin-top:6px}
+.study-custom input{width:92px; font-size:12.5px; padding:8px 10px; border-radius:10px; background:#fffdf9}
+.study-custom span{font-size:12px; color:var(--muted); font-weight:700}
+.study-today{display:flex; gap:6px}
+.study-today span{
+  flex:1; border-radius:12px; padding:9px 10px; font-size:11.5px; font-weight:700; color:var(--ink2);
+  background:#fbf7ef; border:1px solid #f4ebdd; line-height:1.35;
+}
+.study-today span b{display:block; font-size:11px; font-weight:900; color:var(--muted)}
+.study-today span em{font-style:normal; font-size:15px; font-weight:900; color:#5f5a51; font-variant-numeric:tabular-nums}
+.study-count{font-weight:700; color:#b3a894; letter-spacing:0}
+.study-logs{max-height:186px; overflow-y:auto; padding-right:2px}
+.study-log{display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; background:#fcf8f1; border:1px solid #f7efe3}
+.study-log + .study-log{margin-top:4px}
+.sl-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto; white-space:nowrap}
+.sl-who.나연{background:var(--pink-soft); color:#a8617a}
+.sl-who.가빈{background:var(--mint-soft); color:#4a7856}
+.sl-subject{flex:1; min-width:0; font-size:12px; font-weight:700; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sl-mode{font-size:10px; flex:0 0 auto; opacity:.75}
+.sl-dur{font-size:11px; font-weight:900; color:#5f7f68; flex:0 0 auto; white-space:nowrap; font-variant-numeric:tabular-nums}
+.sl-date{font-size:10px; color:#b3a894; flex:0 0 auto; font-variant-numeric:tabular-nums}
+.study-log .icon-btn{width:20px; height:20px; font-size:12px}
+@media (max-width:560px){
+  .study-clock{font-size:40px}
+  .sl-date{display:none}
+}
+
 /* ---- iPad 가로(900–1280px): 4열 그대로 + 상단바 컴팩트 ---- */
 @media (min-width:900px) and (max-width:1280px){
   .brand{flex:1 1 100%; min-width:0}
@@ -908,6 +976,7 @@ body.admin-locked .manual{padding-right:8px}
       <button class="pill-btn notify" id="notifyBtn" aria-pressed="false" aria-label="가족 채팅 알림 켜기" title="새 채팅 메시지를 알림음과 상태표시줄 알림으로 받아요">🔔 알림 꺼짐</button>
       <button class="pill-btn notice-hist" id="noticeHistoryBtn" aria-label="공지 내역 열기" title="지난 가족 공지를 모두 모아 봐요"><span aria-hidden="true">📋</span> 공지 내역<span class="nh-dot" aria-hidden="true"></span></button>
       <button class="pill-btn" id="ledgerBtn">📊 적립 내역</button>
+      <button class="pill-btn study-timer-btn" id="studyTimerBtn" aria-label="공부 타이머 열기" title="공부한 시간을 스탑워치·타이머로 재고 기록해요">⏱️ 공부 타이머</button>
       <button class="pill-btn" id="shopJumpBtn">🎁 보너스 상점</button>
       <button class="pill-btn" id="adminBtn">🔒 설정 잠금</button>
       <button class="pill-btn hidden" id="changePinBtn">🔑 PIN 변경</button>
@@ -1312,6 +1381,11 @@ const CHAT_PEOPLE = [
   { name: '가빈',  emoji: '🐿️' }
 ];
 const CHAT_MAX = 100;
+/* ⏱️ 공부 타이머 */
+const STUDY_PRESETS = ['수학', '영어', '주산', '한자', '독서', '일기/받아쓰기', '숙제'];
+const STUDY_MIN_PRESETS = [10, 20, 30, 45];
+const STUDY_LOGS_MAX = 300;   /* 보관할 공부 기록 수 */
+const STUDY_LIST_MAX = 8;     /* 모달에 보여 줄 최근 기록 수 */
 
 /* ============================================================
    🇰🇷 한국 공휴일 (2025~2028)
@@ -1425,7 +1499,7 @@ const validDateKey = (s) => {
   return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
 };
 
-const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
+const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], studyLogs: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
 let data = fresh();
 let uid = null;
 let unsub = null;
@@ -1572,6 +1646,24 @@ function normalize() {
     data.noticeHistory.unshift({ id: String(data.notice.id), text: data.notice.text, createdAt: Number(data.notice.updatedAt) || 0 });
     data.noticeHistory = data.noticeHistory.slice(0, NOTICE_HISTORY_MAX);
   }
+  /* ⏱️ 공부 기록: 모든 기기가 같은 목록을 함께 봐요 (정리하면서 오래된 것부터 지워요) */
+  data.studyLogs = Array.isArray(data.studyLogs) ? data.studyLogs
+    .filter(s => s && s.id && Number.isFinite(Number(s.seconds)) && Number(s.seconds) > 0)
+    .map(s => {
+      const created = Number(s.createdAt) || 0;
+      const subject = String(s.subject || '').trim().slice(0, 40);
+      return {
+        id: String(s.id),
+        date: validDateKey(String(s.date || '')) ? String(s.date) : (created ? keyOf(new Date(created)) : todayKey()),
+        who: CHILDREN.indexOf(s.who) >= 0 ? s.who : 'nayeon',
+        subject: subject || '공부',
+        seconds: Math.min(Math.round(Number(s.seconds)), 24 * 3600),
+        mode: s.mode === 'timer' ? 'timer' : 'stopwatch',
+        createdAt: created
+      };
+    })
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .slice(-STUDY_LOGS_MAX) : [];
   Object.keys(data.daily).forEach(date => {
     const day = data.daily[date];
     if (!day || typeof day !== 'object') { delete data.daily[date]; return; }
@@ -2299,6 +2391,7 @@ function renderAll() {
   if (!$('dayPanel').classList.contains('hidden')) renderDayPanel();
   syncChat();
   syncLedgerIfOpen();
+  renderStudyAll();
 }
 
 /* ============================================================
@@ -2951,6 +3044,382 @@ function syncLedgerIfOpen() {
 }
 
 /* ============================================================
+   ⏱️ 공부 타이머 · 스탑워치
+   ------------------------------------------------------------
+   - 지금 재고 있는 시간과 시작/멈춤은 이 기기 메모리에만 있어요.
+     그래서 창(모달)을 닫아도 시간은 계속 가고, 상단바 버튼에 보여요.
+   - 저장한 기록은 data.studyLogs 에 쌓여 모든 기기와 함께 봐요.
+   - 시간 재기·저장은 아이들도 할 수 있고, 기록 지우기만 관리자만 해요.
+   ============================================================ */
+let study = {
+  mode: 'stopwatch',      /* 'stopwatch' | 'timer' */
+  who: 'nayeon',
+  subject: '',
+  running: false,
+  accMs: 0,               /* 지금까지 잰 시간 */
+  startAt: 0,             /* 마지막으로 시작을 누른 시각 */
+  targetMs: 20 * 60000,   /* 타이머 목표 시간 */
+  doneFired: false        /* 00:00 도달 알림을 이미 울렸는지 */
+};
+
+function studyElapsedMs() {
+  return Math.max(0, study.accMs + (study.running ? Date.now() - study.startAt : 0));
+}
+function studyTargetMs() { return Math.max(60000, Math.round(Number(study.targetMs) || 0)); }
+function studyRemainMs() { return Math.max(0, studyTargetMs() - studyElapsedMs()); }
+function studyShownMs() { return study.mode === 'timer' ? studyRemainMs() : studyElapsedMs(); }
+function studySeconds() { return Math.round(studyElapsedMs() / 1000); }
+
+/* 00:00 / 00:00:00 */
+function studyClock(ms) {
+  const total = Math.floor(Math.max(0, Number(ms) || 0) / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return h > 0 ? h + ':' + pad(m) + ':' + pad(s) : pad(m) + ':' + pad(s);
+}
+/* 12분 / 12분 30초 / 40초 */
+function studyDurText(sec) {
+  const t = Math.max(0, Math.round(Number(sec) || 0));
+  if (t < 60) return t + '초';
+  const m = Math.floor(t / 60), s = t % 60;
+  return m + '분' + (s ? ' ' + s + '초' : '');
+}
+/* 오늘 합계는 짧게: 25분 / 40초 / 0분 */
+function studyTotalText(sec) {
+  const t = Math.max(0, Math.round(Number(sec) || 0));
+  return t >= 60 ? Math.round(t / 60) + '분' : (t > 0 ? t + '초' : '0분');
+}
+function studyLogs() {
+  if (!Array.isArray(data.studyLogs)) data.studyLogs = [];
+  return data.studyLogs;
+}
+function studyTodaySec(who, date) {
+  const d = date || todayKey();
+  return studyLogs().filter(s => s.who === who && s.date === d)
+    .reduce((n, s) => n + (Number(s.seconds) || 0), 0);
+}
+
+/* ---------------- 상단바 버튼 (재는 중이면 시간이 보여요) ---------------- */
+function renderStudyBtn() {
+  const btn = $('studyTimerBtn');
+  if (!btn) return;
+  let label = '⏱️ 공부 타이머';
+  let hint = '공부 타이머 열기';
+  if (study.running) {
+    label = '⏱️ ' + studyClock(studyShownMs());
+    hint = '공부 타이머 ' + studyClock(studyShownMs()) + ' 재는 중 · 눌러서 열기';
+  } else if (study.accMs > 0) {
+    label = '⏸️ ' + studyClock(studyShownMs());
+    hint = '공부 타이머 ' + studyClock(studyShownMs()) + ' 멈춤 · 눌러서 열기';
+  }
+  btn.textContent = label;
+  btn.classList.toggle('on', study.running);
+  btn.setAttribute('aria-label', hint);
+  btn.title = hint;
+}
+
+/* ---------------- 모달 안쪽 그리기 ---------------- */
+function studyHintText() {
+  if (study.mode === 'timer') {
+    const left = studyDurText(Math.ceil(studyRemainMs() / 1000));
+    if (study.running) return '끝나면 알려 드릴게요 · ' + left + ' 남았어요';
+    if (study.accMs > 0 && studyRemainMs() <= 0) return '⏰ 시간이 다 됐어요! 💾 공부 기록 저장을 눌러 주세요';
+    if (study.accMs > 0) return '잠깐 멈췄어요 · ' + left + ' 남았어요';
+    return '시작을 누르면 ' + studyDurText(Math.round(studyTargetMs() / 1000)) + '을 세어 드려요';
+  }
+  if (study.running) return '재는 중이에요 · 창을 닫아도 계속 재요';
+  if (study.accMs > 0) return '잠깐 멈췄어요 · 계속을 누르면 이어서 재요';
+  return '시작을 누르면 00:00부터 올라가요';
+}
+
+function renderStudyPickers() {
+  const who = $('studyWho');
+  if (who) who.innerHTML = CHILDREN.map(c =>
+    '<button type="button" class="' + (study.who === c ? 'on' : '') + '" data-study-who="' + c + '" aria-pressed="' + (study.who === c ? 'true' : 'false') + '">' + CHILD[c].emoji + ' ' + CHILD[c].name + '</button>'
+  ).join('');
+  const modes = $('studyModes');
+  if (modes) modes.innerHTML = [['stopwatch', '⏱️ 스탑워치'], ['timer', '⏳ 타이머']].map(m =>
+    '<button type="button" class="' + (study.mode === m[0] ? 'on' : '') + '" data-study-mode="' + m[0] + '" aria-pressed="' + (study.mode === m[0] ? 'true' : 'false') + '">' + m[1] + '</button>'
+  ).join('');
+  const chips = $('studyChips');
+  if (chips) chips.innerHTML = STUDY_PRESETS.map(p =>
+    '<button type="button" class="study-chip' + (study.subject === p ? ' on' : '') + '" data-study-preset="' + esc(p) + '" aria-pressed="' + (study.subject === p ? 'true' : 'false') + '">' + esc(p) + '</button>'
+  ).join('');
+  const minRow = $('studyMinRow');
+  if (minRow) minRow.classList.toggle('hidden', study.mode !== 'timer');
+  const mins = $('studyMinChips');
+  if (mins) mins.innerHTML = STUDY_MIN_PRESETS.map(m =>
+    '<button type="button" class="study-chip' + (Math.round(studyTargetMs() / 60000) === m ? ' on' : '') + '" data-study-min="' + m + '">' + m + '분</button>'
+  ).join('');
+}
+
+function renderStudyPanel() {
+  const clock = $('studyClock');
+  if (clock) {
+    clock.textContent = studyClock(studyShownMs());
+    clock.classList.toggle('done', study.mode === 'timer' && studyRemainMs() <= 0 && study.accMs > 0);
+  }
+  const bar = $('studyBar');
+  if (bar) bar.classList.toggle('hidden', study.mode !== 'timer');
+  const fill = $('studyBarFill');
+  if (fill) {
+    const pct = study.mode === 'timer' ? Math.min(100, Math.round(studyElapsedMs() / studyTargetMs() * 100)) : 0;
+    fill.style.width = pct + '%';
+  }
+  const startBtn = $('studyStartBtn');
+  if (startBtn) startBtn.textContent = study.running ? '⏸ 일시정지' : (study.accMs > 0 ? '▶ 계속' : '▶ 시작');
+  const hint = $('studyHint');
+  if (hint) hint.textContent = studyHintText();
+}
+
+function renderStudyToday() {
+  const box = $('studyToday');
+  if (!box) return;
+  const today = todayKey();
+  box.innerHTML = CHILDREN.map(c =>
+    '<span class="' + c + '"><b>' + CHILD[c].emoji + ' ' + CHILD[c].name + ' 오늘</b><em>' + studyTotalText(studyTodaySec(c, today)) + '</em></span>'
+  ).join('');
+}
+
+function renderStudyLogs() {
+  const box = $('studyLogs');
+  if (!box) return;
+  const all = studyLogs().slice().sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+  const count = $('studyLogCount');
+  if (count) count.textContent = all.length ? all.length + '개' : '';
+  if (!all.length) {
+    box.innerHTML = '<p class="empty">아직 공부 기록이 없어요 🌱<br>잰 시간을 💾 저장해 보세요</p>';
+    return;
+  }
+  box.innerHTML = all.slice(0, STUDY_LIST_MAX).map(s => {
+    const c = CHILD[s.who] || CHILD.nayeon;
+    const day = String(s.date || '').slice(5).replace('-', '/');
+    return '<div class="study-log">' +
+      '<span class="sl-who ' + esc(c.name) + '">' + c.emoji + ' ' + esc(c.name) + '</span>' +
+      '<span class="sl-subject">' + esc(s.subject || '공부') + '</span>' +
+      '<span class="sl-mode" aria-hidden="true">' + (s.mode === 'timer' ? '⏳' : '⏱️') + '</span>' +
+      '<span class="sl-dur">' + esc(studyDurText(s.seconds)) + '</span>' +
+      '<span class="sl-date">' + esc(day) + '</span>' +
+      (isAdminUnlocked ? '<button class="icon-btn" data-study-del="' + esc(s.id) + '" aria-label="공부 기록 삭제" title="이 기록 지우기">✕</button>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function renderStudyAll() {
+  renderStudyBtn();
+  renderStudyPickers();
+  renderStudyPanel();
+  renderStudyToday();
+  renderStudyLogs();
+}
+
+function openStudyTimer() {
+  $('modalRoot').innerHTML =
+    '<div class="modal-backdrop"><div class="modal study-modal" role="dialog" aria-modal="true">' +
+      '<h2>⏱️ 공부 타이머 · 스탑워치</h2>' +
+      '<div class="modal-sub">공부한 시간을 재고 기록으로 남겨요 · 창을 닫아도 시간은 계속 가요</div>' +
+      '<div class="study-sec">누구 공부인가요?</div>' +
+      '<div class="study-who" id="studyWho"></div>' +
+      '<div class="study-sec">공부 내용</div>' +
+      '<div class="study-subject"><input id="studySubject" type="text" maxlength="40" placeholder="예) 수학 문제집 3장" aria-label="공부 내용"></div>' +
+      '<div class="study-chips" id="studyChips"></div>' +
+      '<div class="study-modes" id="studyModes"></div>' +
+      '<div class="study-clock" id="studyClock" role="timer" aria-live="off">00:00</div>' +
+      '<div class="study-bar hidden" id="studyBar"><i id="studyBarFill"></i></div>' +
+      '<p class="study-hint" id="studyHint"></p>' +
+      '<div class="study-controls">' +
+        '<button class="btn primary" id="studyStartBtn">▶ 시작</button>' +
+        '<button class="btn" id="studyResetBtn">↺ 리셋</button>' +
+      '</div>' +
+      '<button class="btn study-save" id="studySaveBtn">💾 공부 기록 저장</button>' +
+      '<div class="study-min hidden" id="studyMinRow">' +
+        '<div class="study-sec">타이머 시간</div>' +
+        '<div class="study-chips" id="studyMinChips"></div>' +
+        '<div class="study-custom">' +
+          '<input id="studyCustomMin" type="number" min="1" max="180" step="1" inputmode="numeric" placeholder="직접 입력" aria-label="타이머 분 직접 입력"><span>분</span>' +
+          '<button class="mini" id="studyCustomBtn">적용</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="study-sec">오늘의 공부 합계</div>' +
+      '<div class="study-today" id="studyToday"></div>' +
+      '<div class="study-sec">최근 공부 기록 <span class="study-count" id="studyLogCount"></span></div>' +
+      '<div class="study-logs" id="studyLogs"></div>' +
+      '<div class="modal-actions"><button class="btn" data-modal-close>닫기</button></div>' +
+    '</div></div>';
+  const root = $('modalRoot');
+  root.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+  const backdrop = root.querySelector('.modal-backdrop');
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+  const subj = $('studySubject');
+  if (subj) {
+    subj.value = study.subject;
+    subj.addEventListener('input', () => {
+      study.subject = String(subj.value || '').slice(0, 40);
+      renderStudyPickers();
+    });
+  }
+  const custom = $('studyCustomMin');
+  if (custom) custom.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); studyApplyCustom(); }
+  });
+  renderStudyAll();
+}
+
+/* ---------------- 동작 ---------------- */
+function studyStart() {
+  if (study.running) return;
+  if (study.mode === 'timer' && studyRemainMs() <= 0) { study.accMs = 0; study.doneFired = false; }
+  study.startAt = Date.now();
+  study.running = true;
+  audioCtxGet(true);   /* 태블릿에서 알림음이 막히지 않게 버튼 누른 순간에 준비해 둬요 */
+  renderStudyAll();
+}
+function studyPause() {
+  if (!study.running) return;
+  study.accMs = studyElapsedMs();
+  study.startAt = 0;
+  study.running = false;
+  renderStudyAll();
+}
+function studyToggle() { if (study.running) studyPause(); else studyStart(); }
+function studyReset(quiet) {
+  study.running = false;
+  study.startAt = 0;
+  study.accMs = 0;
+  study.doneFired = false;
+  renderStudyAll();
+  if (!quiet) toast('⏱️ 시간을 00:00으로 되돌렸어요', 'good');
+}
+function studySetMode(mode) {
+  const m = mode === 'timer' ? 'timer' : 'stopwatch';
+  if (m === study.mode) return;
+  study.mode = m;
+  studyPause();   /* 모드를 바꾸면 재던 시간은 초기화해요 */
+  study.accMs = 0;
+  study.startAt = 0;
+  study.doneFired = false;
+  renderStudyAll();
+}
+function studyPickWho(who) {
+  if (CHILDREN.indexOf(who) < 0) return;
+  study.who = who;
+  renderStudyPickers();
+}
+function studyApplyPreset(p) {
+  const name = String(p || '').slice(0, 40);
+  study.subject = study.subject === name ? '' : name;   /* 같은 칩을 다시 누르면 지워져요 */
+  const inp = $('studySubject');
+  if (inp) inp.value = study.subject;
+  renderStudyPickers();
+}
+function studySetTarget(min, notify) {
+  const m = Math.min(180, Math.max(1, Math.round(Number(min) || 0)));
+  study.targetMs = m * 60000;
+  study.mode = 'timer';
+  study.running = false;
+  study.startAt = 0;
+  study.accMs = 0;
+  study.doneFired = false;
+  renderStudyAll();
+  if (notify) toast('⏳ ' + m + '분 타이머로 맞췄어요', 'good');
+}
+function studyApplyCustom() {
+  const el = $('studyCustomMin');
+  const min = Math.round(Number(el && el.value));
+  if (!Number.isFinite(min) || min < 1 || min > 180) {
+    toast('1분에서 180분 사이로 적어 주세요 ⏳', 'warn');
+    return;
+  }
+  studySetTarget(min, true);
+}
+function studySave() {
+  const sec = studySeconds();
+  if (sec < 1) { toast('아직 잰 시간이 없어요 · 시작을 먼저 눌러 주세요', 'warn'); return; }
+  const who = CHILDREN.indexOf(study.who) >= 0 ? study.who : 'nayeon';
+  const subject = String(study.subject || '').trim().slice(0, 40) || '공부';
+  const list = studyLogs();
+  list.push({
+    id: newId('s'),
+    date: todayKey(),
+    who: who,
+    subject: subject,
+    seconds: Math.min(sec, 24 * 3600),
+    mode: study.mode,
+    createdAt: Date.now()
+  });
+  while (list.length > STUDY_LOGS_MAX) list.shift();
+  study.running = false;
+  study.startAt = 0;
+  study.accMs = 0;
+  study.doneFired = false;
+  renderStudyAll();
+  save();
+  const c = CHILD[who];
+  toast('💾 ' + c.emoji + ' ' + c.name + ' ' + subject + ' ' + studyDurText(sec) + ' 저장했어요', 'good');
+}
+/* 기록 지우기는 관리자만 (아이들은 시간 재기·저장만 해요) */
+async function delStudyLog(id) {
+  if (!requireAdmin()) return;
+  const s = studyLogs().find(x => x.id === id);
+  if (!s) return;
+  const c = CHILD[s.who] || CHILD.nayeon;
+  if (!(await askConfirm(c.emoji + ' ' + c.name + ' ' + (s.subject || '공부') + ' ' + studyDurText(s.seconds) + ' 기록을 지울까요?', '지우기', true))) return;
+  removeStudyLog(id);
+}
+function removeStudyLog(id) {
+  const before = studyLogs().length;
+  data.studyLogs = studyLogs().filter(x => x.id !== id);
+  if (data.studyLogs.length === before) return;
+  renderStudyAll();
+  save();
+  toast('공부 기록을 지웠어요', 'good');
+}
+
+/* 타이머 종료 알림음 (세 음이 올라가는 부드러운 소리) */
+function playStudyChime() {
+  try {
+    const ctx = audioCtxGet(true);
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.02;
+    [[659.25, 0], [783.99, 0.17], [1046.5, 0.34]].forEach(note => {
+      const freq = note[0], off = note[1];
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t0 + off);
+      gain.gain.setValueAtTime(0.0001, t0 + off);
+      gain.gain.exponentialRampToValueAtTime(0.18, t0 + off + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.42);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0 + off);
+      osc.stop(t0 + off + 0.48);
+    });
+  } catch (e) { /* 소리를 못 내는 브라우저에서도 앱은 그대로 동작 */ }
+}
+
+function onStudyTimerDone() {
+  playStudyChime();
+  const c = CHILD[study.who] || CHILD.nayeon;
+  const what = String(study.subject || '').trim() || '공부';
+  toast('🎉 ' + c.emoji + ' ' + c.name + ' ' + what + ' ' + studyDurText(studySeconds()) + ' 끝! 💾 저장을 눌러 기록해 주세요', 'good');
+  renderStudyAll();
+}
+
+/* 1초마다: 상단바·모달 시계를 새로 그리고, 타이머가 00:00이 되면 알려요 */
+function studyTick() {
+  if (study.running && study.mode === 'timer' && studyElapsedMs() >= studyTargetMs()) {
+    study.accMs = studyTargetMs();
+    study.running = false;
+    study.startAt = 0;
+    if (!study.doneFired) { study.doneFired = true; onStudyTimerDone(); }
+  }
+  renderStudyBtn();
+  renderStudyPanel();
+}
+
+/* ============================================================
    동작
    ============================================================ */
 function markAllClear(child) {
@@ -3414,6 +3883,7 @@ function tick() {
     lastToday = keyOf(d);
     if (!$('appView').classList.contains('hidden')) { renderAll(); scheduleReminders(300); }
   }
+  studyTick();
 }
 
 function openScreensaver() {
@@ -3574,6 +4044,16 @@ document.addEventListener('click', async e => {
   if (t.id === 'rewardAddBtn') { addReward(); return; }
   if (t.dataset.delReward) { delReward(t.dataset.delReward); return; }
   if (t.id === 'ledgerBtn') { openLedger(); return; }
+  if (t.id === 'studyTimerBtn') { openStudyTimer(); return; }
+  if (t.dataset.studyWho) { studyPickWho(t.dataset.studyWho); return; }
+  if (t.dataset.studyMode) { studySetMode(t.dataset.studyMode); return; }
+  if (t.dataset.studyPreset) { studyApplyPreset(t.dataset.studyPreset); return; }
+  if (t.dataset.studyMin) { studySetTarget(Number(t.dataset.studyMin), true); return; }
+  if (t.dataset.studyDel) { delStudyLog(t.dataset.studyDel); return; }
+  if (t.id === 'studyStartBtn') { studyToggle(); return; }
+  if (t.id === 'studyResetBtn') { studyReset(); return; }
+  if (t.id === 'studySaveBtn') { studySave(); return; }
+  if (t.id === 'studyCustomBtn') { studyApplyCustom(); return; }
   if (t.id === 'shopJumpBtn') {
     $('shopCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
     $('shopCard').animate(
