@@ -253,6 +253,11 @@ select{
 .dday-main{flex:1; min-width:0}
 .dday-main b{display:block; font-size:12.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .dday-main span{font-size:10.5px; color:var(--muted)}
+.dday-more{
+  width:100%; margin-top:1px; border:1px dashed #eadfcd; background:transparent; color:var(--muted);
+  font-size:11px; font-weight:800; border-radius:10px; padding:6px 8px; cursor:pointer; transition:.15s;
+}
+.dday-more:hover{background:#faf3e6; color:var(--ink2); border-color:#e2d4bf}
 
 /* ---------------- child card ---------------- */
 .child-card{position:relative; overflow:hidden; padding:13px 13px 12px}
@@ -699,6 +704,25 @@ body.admin-locked .notice-empty{display:none!important}
 .dday-pop .modal-actions{justify-content:center; margin-top:18px}
 .dday-pop .modal-actions .btn{min-width:130px}
 
+/* ---------------- 📅 전체 일정 모달 ---------------- */
+.allev{text-align:left}
+.allev-sec{display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; color:var(--muted); letter-spacing:.05em; margin:16px 0 7px}
+.allev-sec:first-child{margin-top:6px}
+.allev-count{font-size:9.5px; font-weight:900; color:#8a7a63; background:#f6efe4; border-radius:99px; padding:2px 7px; letter-spacing:0}
+.allev-list{display:flex; flex-direction:column; gap:7px}
+.allev-row{display:flex; align-items:flex-start; gap:8px; background:linear-gradient(180deg,#fffdf8,#fdf7ee); border:1px solid #f1e6d5; border-radius:14px; padding:10px 11px}
+.allev-row.past{background:#fbf8f3; border-color:#f2ece2}
+.allev-row .dday-badge{flex:0 0 auto; margin-top:1px}
+.dday-badge.past{background:linear-gradient(135deg,#d8d1c6,#c4bbb0)}
+.allev-main{flex:1; min-width:0}
+.allev-top{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.allev-title{font-size:13px; font-weight:900; color:var(--ink); word-break:keep-all}
+.allev-row.past .allev-title{color:var(--ink2)}
+.allev-meta{display:block; font-size:10.5px; color:var(--muted); margin-top:3px; line-height:1.5}
+.allev-memo{display:block; font-size:10.5px; color:#8a7a63; margin-top:2px; line-height:1.5; word-break:keep-all}
+.allev-btns{display:flex; align-items:center; gap:1px; flex:0 0 auto}
+.allev-empty{font-size:12px; color:#b3aa9c; text-align:center; padding:14px 4px}
+
 /* ---------------- 엄마·아빠 보너스 포인트 ---------------- */
 .manual-card{background:linear-gradient(180deg,#fffaf3,rgba(255,253,248,.95))}
 .manual-form{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
@@ -956,6 +980,7 @@ body.admin-locked .manual{padding-right:8px}
       <div class="card">
         <div class="sec-head">
           <h2>📅 D-Day</h2>
+          <button class="mini" id="allEventsBtn">전체 일정</button>
           <button class="mini" id="quickAddEvent">+ 일정 추가</button>
         </div>
         <div class="dday-list" id="ddayList"></div>
@@ -1407,6 +1432,7 @@ let lastToday = todayKey();
 let writing = 0;
 let idleTimer = null;
 let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
+let allEventsReturn = false;   /* 전체 일정 모달에서 수정·삭제했을 때 다시 그 모달로 돌아가기 */
 
 /* 가족 채팅방 상태 (선택한 이름과 마지막으로 본 시각은 이 기기에만 저장) */
 let chatOpen = false;
@@ -1875,27 +1901,103 @@ function whoDot(who) {
   return 'dot-f';
 }
 
-function renderDday() {
+const DDAY_LIMIT = 3;   /* 대시보드 D-Day 카드에는 다가오는 일정 최대 3개 */
+
+/* 일정 배지(디데이 계산은 한 곳에서) */
+function ddayBadge(e) {
   const today = todayKey();
-  const up = data.events.filter(e => daysBetween(today, eventEnd(e)) >= 0)
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || eventEnd(a).localeCompare(eventEnd(b))).slice(0, 6);
-  $('ddayList').innerHTML = up.length
-    ? up.map(e => {
-        const startN = daysBetween(today, String(e.date));
-        const endN = daysBetween(today, eventEnd(e));
-        let label, cls;
-        if (startN > 0) { label = 'D-' + startN; cls = startN <= 3 ? ' soon' : ''; }
-        else if (startN === 0) { label = 'D-day'; cls = ' today'; }
-        else if (endN >= 0) { label = '진행 중'; cls = ' today'; }
-        else { label = 'D+' + Math.abs(startN); cls = ''; }
+  const startN = daysBetween(today, String(e.date));
+  const endN = daysBetween(today, eventEnd(e));
+  if (startN > 0) return { label: 'D-' + startN, cls: startN <= 3 ? ' soon' : '' };
+  if (startN === 0) return { label: 'D-day', cls: ' today' };
+  if (endN >= 0) return { label: '진행 중', cls: ' today' };
+  return { label: 'D+' + Math.abs(startN), cls: ' past' };
+}
+/* 다가오는 일정(진행 중 포함) — 가까운 날짜 순 */
+function upcomingEvents() {
+  const today = todayKey();
+  return data.events.filter(e => daysBetween(today, eventEnd(e)) >= 0)
+    .slice()
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || eventEnd(a).localeCompare(eventEnd(b)));
+}
+/* 지난 일정 — 최근에 끝난 것부터 */
+function pastEvents() {
+  const today = todayKey();
+  return data.events.filter(e => daysBetween(today, eventEnd(e)) < 0)
+    .slice()
+    .sort((a, b) => eventEnd(b).localeCompare(eventEnd(a)) || String(b.date).localeCompare(String(a.date)));
+}
+
+function renderDday() {
+  const up = upcomingEvents();
+  const past = pastEvents();
+  const shown = up.slice(0, DDAY_LIMIT);
+  const rest = up.length - shown.length;
+  let html = shown.length
+    ? shown.map(e => {
+        const b = ddayBadge(e);
         return '<div class="dday">' +
-          '<span class="dday-badge' + cls + '">' + label + '</span>' +
+          '<span class="dday-badge' + b.cls + '">' + b.label + '</span>' +
           '<span class="dday-main"><b>' + esc(e.title) + '</b><span>' + eventRange(e) + ' · ' + esc(e.who) + '</span></span>' +
           '<button class="icon-btn" data-edit-event="' + esc(e.id) + '" aria-label="일정 수정">✏️</button>' +
           '<button class="icon-btn" data-del-event="' + esc(e.id) + '" aria-label="일정 삭제">✕</button>' +
         '</div>';
       }).join('')
     : '<p class="empty">다가오는 일정이 없어요 🌿</p>';
+  if (rest > 0 || past.length) {
+    const bits = [];
+    if (rest > 0) bits.push('다가오는 일정 ' + rest + '개 더');
+    if (past.length) bits.push('지난 일정 ' + past.length + '개');
+    html += '<button class="dday-more" data-all-events="1">' + bits.join(' · ') + ' 보기 ›</button>';
+  }
+  $('ddayList').innerHTML = html;
+}
+
+/* ---------- 📅 전체 일정 (다가오는 일정 + 지난 일정) ---------- */
+function allEventRow(e, isPast) {
+  const b = ddayBadge(e);
+  const memo = String(e.memo || '').trim();
+  return '<div class="allev-row' + (isPast ? ' past' : '') + '">' +
+    '<span class="dday-badge' + b.cls + '">' + b.label + '</span>' +
+    '<div class="allev-main">' +
+      '<div class="allev-top"><span class="allev-title">' + esc(e.title) + '</span>' +
+        '<span class="who-tag ' + esc(e.who) + '">' + esc(e.who) + '</span></div>' +
+      '<span class="allev-meta">' + eventRange(e) + (isMultiDay(e) ? ' · ' + eventStatus(e) : '') + '</span>' +
+      (memo ? '<span class="allev-memo">📍 ' + esc(memo) + '</span>' : '') +
+    '</div>' +
+    (isAdminUnlocked
+      ? '<div class="allev-btns">' +
+          '<button class="icon-btn" data-edit-event="' + esc(e.id) + '" data-from-all="1" aria-label="일정 수정">✏️</button>' +
+          '<button class="icon-btn" data-del-event="' + esc(e.id) + '" data-from-all="1" aria-label="일정 삭제">✕</button>' +
+        '</div>'
+      : '') +
+  '</div>';
+}
+
+function openAllEvents() {
+  allEventsReturn = false;
+  if (document.querySelector('.modal-backdrop')) closeModal();
+  const up = upcomingEvents();
+  const past = pastEvents();
+  let body = '<div class="allev">';
+  if (!up.length && !past.length) {
+    body += '<p class="allev-empty">아직 등록된 일정이 없어요 🌿</p>';
+  } else {
+    if (up.length) {
+      body += '<div class="allev-sec">🍀 다가오는 일정 <span class="allev-count">' + up.length + '</span></div>' +
+        '<div class="allev-list">' + up.map(e => allEventRow(e, false)).join('') + '</div>';
+    }
+    if (past.length) {
+      body += '<div class="allev-sec">🗂 지난 일정 <span class="allev-count">' + past.length + '</span></div>' +
+        '<div class="allev-list">' + past.map(e => allEventRow(e, true)).join('') + '</div>';
+    }
+  }
+  body += '</div>';
+  const total = up.length + past.length;
+  const sub = total
+    ? '가족 일정 ' + total + '개 · 다가오는 ' + up.length + ' · 지난 ' + past.length
+    : '가족 일정을 한곳에서 모아 봐요';
+  openModal('📅 전체 일정', sub, body);
 }
 
 /* ============================================================
@@ -3197,14 +3299,15 @@ function openEventEditor(id) {
       if (validDateKey(dateInput.value) && endInput.value && endInput.value <= dateInput.value) endInput.value = '';
     });
   }
+  const leaveEditor = () => { closeModal(); if (allEventsReturn) openAllEvents(); };
   const cancel = root.querySelector('[data-event-cancel]');
-  if (cancel) cancel.addEventListener('click', closeModal);
+  if (cancel) cancel.addEventListener('click', leaveEditor);
   const saveBtn = root.querySelector('[data-event-save]');
   if (saveBtn) saveBtn.addEventListener('click', () => saveEventEdit(id));
   const inputs = ['evEditTitle', 'evEditDate', 'evEditEnd', 'evEditMemo', 'evEditPrep'].map(k => $(k)).filter(Boolean);
   inputs.forEach(inp => inp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); saveEventEdit(id); } }));
   const backdrop = root.querySelector('.modal-backdrop');
-  if (backdrop) backdrop.addEventListener('click', ev => { if (ev.target === backdrop) closeModal(); });
+  if (backdrop) backdrop.addEventListener('click', ev => { if (ev.target === backdrop) leaveEditor(); });
 }
 
 function saveEventEdit(id) {
@@ -3240,6 +3343,7 @@ function saveEventEdit(id) {
   renderDayPanel();
   renderDday();
   save();
+  if (allEventsReturn) openAllEvents();
   toast('✏️ 일정을 고쳤어요', 'good');
 }
 
@@ -3247,12 +3351,18 @@ async function delEvent(id) {
   const e = data.events.find(x => x.id === id);
   if (!e) return;
   if (!requireAdmin()) return;
-  if (!(await askConfirm("'" + e.title + "' 일정을 삭제할까요?", '삭제', true))) return;
+  /* 전체 일정 모달 안에서 눌렀을 때: 확인창을 띄우려면 모달을 먼저 닫아요 */
+  if (document.querySelector('.modal-backdrop')) closeModal();
+  if (!(await askConfirm("'" + e.title + "' 일정을 삭제할까요?", '삭제', true))) {
+    if (allEventsReturn) openAllEvents();
+    return;
+  }
   data.events = data.events.filter(x => x.id !== id);
   renderCalendar();
   renderDayPanel();
   renderDday();
   save();
+  if (allEventsReturn) openAllEvents();
 }
 
 /* ============================================================
@@ -3410,8 +3520,8 @@ document.addEventListener('click', async e => {
   if (t.dataset.reward) { redeemReward(t.dataset.child, t.dataset.reward); return; }
   if (t.dataset.undoRedeem) { undoRedeem(t.dataset.undoRedeem); return; }
   if (t.dataset.wishDel) { delWish(t.dataset.wishDel); return; }
-  if (t.dataset.editEvent) { openEventEditor(t.dataset.editEvent); return; }
-  if (t.dataset.delEvent) { delEvent(t.dataset.delEvent); return; }
+  if (t.dataset.editEvent) { allEventsReturn = !!t.dataset.fromAll; openEventEditor(t.dataset.editEvent); return; }
+  if (t.dataset.delEvent) { allEventsReturn = !!t.dataset.fromAll; delEvent(t.dataset.delEvent); return; }
   if (t.dataset.date) { openDay(t.dataset.date); return; }
   if (t.id === 'prevMonth') { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); renderCalendar(); return; }
   if (t.id === 'nextMonth') { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1); renderCalendar(); return; }
@@ -3421,6 +3531,8 @@ document.addEventListener('click', async e => {
     return;
   }
   if (t.id === 'closeDayPanel') { $('dayPanel').classList.add('hidden'); renderCalendar(); return; }
+  if (t.dataset.allEvents) { openAllEvents(); return; }
+  if (t.id === 'allEventsBtn') { openAllEvents(); return; }
   if (t.id === 'quickAddEvent') {
     openDay(selectedDate || todayKey());
     $('eventTitle').focus();
