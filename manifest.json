@@ -1,0 +1,11 @@
+{
+  "name": "나연이 가빈이네 가족 대시보드",
+  "short_name": "가족 퀘스트",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fcf8f2",
+  "theme_color": "#fcf8f2",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
