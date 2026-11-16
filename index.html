@@ -889,6 +889,8 @@ body.admin-locked .manual{padding-right:8px}
 .sl-dur{font-size:11px; font-weight:900; color:#5f7f68; flex:0 0 auto; white-space:nowrap; font-variant-numeric:tabular-nums}
 .sl-date{font-size:10px; color:#b3a894; flex:0 0 auto; font-variant-numeric:tabular-nums}
 .study-log .icon-btn{width:20px; height:20px; font-size:12px}
+.study-log .mini{padding:3px 7px; font-size:10.5px; border-radius:8px}
+.sl-confirm{font-size:10px; font-weight:900; color:#b7657c; flex:0 0 auto; white-space:nowrap}
 @media (max-width:560px){
   .study-clock{font-size:40px}
   .sl-date{display:none}
@@ -3059,7 +3061,8 @@ let study = {
   accMs: 0,               /* 지금까지 잰 시간 */
   startAt: 0,             /* 마지막으로 시작을 누른 시각 */
   targetMs: 20 * 60000,   /* 타이머 목표 시간 */
-  doneFired: false        /* 00:00 도달 알림을 이미 울렸는지 */
+  doneFired: false,       /* 00:00 도달 알림을 이미 울렸는지 */
+  delPending: ''          /* 지우기 한 번 더 확인 중인 기록 */
 };
 
 function studyElapsedMs() {
@@ -3195,13 +3198,22 @@ function renderStudyLogs() {
   box.innerHTML = all.slice(0, STUDY_LIST_MAX).map(s => {
     const c = CHILD[s.who] || CHILD.nayeon;
     const day = String(s.date || '').slice(5).replace('-', '/');
+    let tools = '';
+    if (isAdminUnlocked) {
+      /* 모달을 하나씩만 띄우는 규칙이라 확인 창 대신 이 줄에서 한 번 더 물어봐요 */
+      tools = study.delPending === s.id
+        ? '<span class="sl-confirm">지울까요?</span>' +
+          '<button class="mini" data-study-del-ok="' + esc(s.id) + '">지우기</button>' +
+          '<button class="mini" data-study-del-cancel="1">취소</button>'
+        : '<button class="icon-btn" data-study-del="' + esc(s.id) + '" aria-label="공부 기록 삭제" title="이 기록 지우기">✕</button>';
+    }
     return '<div class="study-log">' +
       '<span class="sl-who ' + esc(c.name) + '">' + c.emoji + ' ' + esc(c.name) + '</span>' +
       '<span class="sl-subject">' + esc(s.subject || '공부') + '</span>' +
       '<span class="sl-mode" aria-hidden="true">' + (s.mode === 'timer' ? '⏳' : '⏱️') + '</span>' +
       '<span class="sl-dur">' + esc(studyDurText(s.seconds)) + '</span>' +
       '<span class="sl-date">' + esc(day) + '</span>' +
-      (isAdminUnlocked ? '<button class="icon-btn" data-study-del="' + esc(s.id) + '" aria-label="공부 기록 삭제" title="이 기록 지우기">✕</button>' : '') +
+      tools +
     '</div>';
   }).join('');
 }
@@ -3263,6 +3275,7 @@ function openStudyTimer() {
   if (custom) custom.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); studyApplyCustom(); }
   });
+  study.delPending = '';
   renderStudyAll();
 }
 
@@ -3358,19 +3371,24 @@ function studySave() {
   const c = CHILD[who];
   toast('💾 ' + c.emoji + ' ' + c.name + ' ' + subject + ' ' + studyDurText(sec) + ' 저장했어요', 'good');
 }
-/* 기록 지우기는 관리자만 (아이들은 시간 재기·저장만 해요) */
-async function delStudyLog(id) {
+/* 기록 지우기는 관리자만 · 아이들은 시간 재기·저장만 해요 */
+function askStudyDelete(id) {
   if (!requireAdmin()) return;
-  const s = studyLogs().find(x => x.id === id);
-  if (!s) return;
-  const c = CHILD[s.who] || CHILD.nayeon;
-  if (!(await askConfirm(c.emoji + ' ' + c.name + ' ' + (s.subject || '공부') + ' ' + studyDurText(s.seconds) + ' 기록을 지울까요?', '지우기', true))) return;
-  removeStudyLog(id);
+  if (!studyLogs().some(x => x.id === id)) return;
+  study.delPending = study.delPending === id ? '' : id;   /* 같은 ✕을 다시 누르면 취소 */
+  renderStudyLogs();
+}
+function cancelStudyDelete() {
+  if (!study.delPending) return;
+  study.delPending = '';
+  renderStudyLogs();
 }
 function removeStudyLog(id) {
+  if (!requireAdmin()) return;
   const before = studyLogs().length;
   data.studyLogs = studyLogs().filter(x => x.id !== id);
   if (data.studyLogs.length === before) return;
+  study.delPending = '';
   renderStudyAll();
   save();
   toast('공부 기록을 지웠어요', 'good');
@@ -4049,7 +4067,9 @@ document.addEventListener('click', async e => {
   if (t.dataset.studyMode) { studySetMode(t.dataset.studyMode); return; }
   if (t.dataset.studyPreset) { studyApplyPreset(t.dataset.studyPreset); return; }
   if (t.dataset.studyMin) { studySetTarget(Number(t.dataset.studyMin), true); return; }
-  if (t.dataset.studyDel) { delStudyLog(t.dataset.studyDel); return; }
+  if (t.dataset.studyDel) { askStudyDelete(t.dataset.studyDel); return; }
+  if (t.dataset.studyDelOk) { removeStudyLog(t.dataset.studyDelOk); return; }
+  if (t.dataset.studyDelCancel) { cancelStudyDelete(); return; }
   if (t.id === 'studyStartBtn') { studyToggle(); return; }
   if (t.id === 'studyResetBtn') { studyReset(); return; }
   if (t.id === 'studySaveBtn') { studySave(); return; }
