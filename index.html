@@ -352,27 +352,56 @@ select{
   background:linear-gradient(135deg,#f2b3c3,#e595aa); color:#fff; border:0; box-shadow:0 3px 9px rgba(230,150,170,.28)}
 .wish-list{display:flex; flex-direction:column; gap:5px; max-height:220px; overflow-y:auto}
 .wish{
-  display:flex; align-items:center; gap:7px; padding:7px 8px; border-radius:11px; background:#fbf7f0;
+  display:flex; flex-direction:column; gap:5px; padding:7px 8px; border-radius:11px; background:#fbf7f0;
   border:1px solid #f5ecdf; transition:.15s;
 }
-.wish.bought{background:#f4f1ea; opacity:.72}
-.wish input[type=checkbox]{
-  appearance:none; -webkit-appearance:none; width:18px; height:18px; flex:0 0 auto; padding:0; border-radius:6px;
-  border:1.7px solid #e2d6cd; background:#fff; cursor:pointer; position:relative; margin:0; transition:.16s;
-}
-.wish input[type=checkbox]:checked{background:linear-gradient(135deg,#9cc9a6,#79ac86); border-color:transparent}
-.wish input[type=checkbox]:checked::after{
-  content:""; position:absolute; left:5px; top:2.5px; width:5px; height:9px;
-  border:2px solid #fff; border-top:0; border-left:0; transform:rotate(42deg);
-}
+.wish-top{display:flex; align-items:center; gap:7px; min-width:0}
 .wish-main{flex:1; min-width:0}
 .wish-main b{display:block; font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.wish.bought .wish-main b{text-decoration:line-through; color:#b1a89b}
 .wish-main span{font-size:10.5px; color:var(--muted); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .wish-date{font-size:9.5px; font-weight:800; color:#b6a894; flex:0 0 auto; font-variant-numeric:tabular-nums}
 .wish-who{font-size:9.5px; font-weight:900; border-radius:99px; padding:1px 6px; flex:0 0 auto}
 .wish-who.나연{background:var(--pink-soft); color:#a8617a}
 .wish-who.가빈{background:var(--mint-soft); color:#4a7856}
+/* 엄마·아빠 답(O / X)과 사줬음 버튼 */
+.wish-foot{display:flex; align-items:center; gap:5px; flex-wrap:wrap}
+.wish-badge{font-size:9.5px; font-weight:900; border-radius:99px; padding:2px 7px; flex:0 0 auto; white-space:nowrap; letter-spacing:.02em}
+.wish-badge.ok{background:#e2f1e6; color:#457a55; border:1px solid #cfe6d5}
+.wish-badge.no{background:#fde9ed; color:#b2586e; border:1px solid #f7d6de}
+.wish-badge.wait{background:#f3eee4; color:#a1957e; border:1px solid #ebe2d4}
+.wish-badge.done{background:#eaf0e4; color:#5d7d58; border:1px solid #dbe6d3}
+.wish-acts{display:flex; align-items:center; gap:4px; margin-left:auto; flex:0 0 auto}
+.wish-act{
+  border:1px solid #e6dccd; background:#fff; color:#9a9081; border-radius:8px; padding:2px 8px;
+  font-size:11px; font-weight:900; line-height:1.5; cursor:pointer; min-width:26px; transition:.15s;
+}
+.wish-act:hover{background:#fffaf2; border-color:#e0d2bd}
+.wish-act.ok.on{background:linear-gradient(135deg,#9cc9a6,#79ac86); color:#fff; border-color:transparent; box-shadow:0 2px 7px rgba(120,170,135,.3)}
+.wish-act.no.on{background:linear-gradient(135deg,#efa3b0,#e07f92); color:#fff; border-color:transparent; box-shadow:0 2px 7px rgba(220,130,150,.28)}
+.wish-act.buy{padding:2px 6px; font-size:12px; border-color:#dfe8d6}
+.wish-act.buy:hover{background:#f2f8ee; border-color:#cfe0c2}
+
+/* 📋 사주세요 목록보기 */
+.wish-hist{max-width:520px; display:flex; flex-direction:column; overflow:hidden}
+.wh-tabs{display:flex; gap:5px; flex-wrap:wrap; margin:11px 0 9px}
+.wh-tab{
+  border:1px solid var(--line); background:#fff; color:#8d8271; border-radius:99px; padding:5px 10px;
+  font-size:11.5px; font-weight:800; cursor:pointer; transition:.15s; white-space:nowrap;
+}
+.wh-tab:hover{background:#fffaf2}
+.wh-tab.on{background:linear-gradient(135deg,#ffe9ee,#ffdbe4); border-color:#f0c8d4; color:#a8617a}
+.wh-tab b{font-variant-numeric:tabular-nums; font-weight:900; opacity:.75; margin-left:1px}
+.wh-list{display:flex; flex-direction:column; gap:6px; overflow-y:auto; min-height:70px; max-height:52vh; padding-right:2px}
+.wh-item{border:1px solid #f1e4d0; background:linear-gradient(180deg,#fffdf8,#fdf7ee); border-radius:14px; padding:8px 10px}
+.wh-item.done{background:linear-gradient(180deg,#f8faf4,#f3f7ee); border-color:#e3ebd9}
+.wh-head{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.wh-name{font-size:12.5px; font-weight:800; color:var(--ink); flex:1; min-width:0; word-break:break-all}
+.wh-item.done .wh-name{color:#6f7a68}
+.wh-meta{display:flex; align-items:center; gap:4px 9px; flex-wrap:wrap; margin-top:4px; font-size:10.5px; color:var(--muted)}
+.wh-memo{word-break:keep-all}
+.wh-btns{display:flex; align-items:center; gap:4px; margin-left:auto}
+.wh-btns .mini{padding:3px 8px; font-size:10px; border-radius:8px}
+.wh-empty{font-size:12px; color:#b0a695; text-align:center; padding:22px 6px; line-height:1.6}
 
 /* ---------------- shop ---------------- */
 .shop-card{background:linear-gradient(180deg,#fffaf0,rgba(255,253,248,.95))}
@@ -485,7 +514,7 @@ body.admin-locked #quickAddEvent,
 body.admin-locked .icon-btn[data-edit-event],
 body.admin-locked .icon-btn[data-del-event],
 body.admin-locked .icon-btn[data-wish-del],
-body.admin-locked .wish input[type=checkbox],
+body.admin-locked .wish-acts,
 body.admin-locked .icon-btn[data-undo-manual],
 body.admin-locked .icon-btn[data-undo-redeem]{display:none!important}
 .edit-field{margin-top:10px; text-align:left}
@@ -1229,10 +1258,11 @@ body.admin-locked .manual{padding-right:8px}
 
     <!-- ---------- 4열 : 사주세요 + 보너스 상점 ---------- -->
     <section class="col">
-      <div class="card">
+      <div class="card" id="wishCard">
         <div class="sec-head">
           <h2>🛒 엄마 이거 사주세요</h2>
           <span class="count" id="wishCount">0개</span>
+          <button class="mini" id="wishHistBtn" aria-label="사주세요 전체 목록 보기" title="사준 것까지 모두 모아 봐요">📋 목록보기</button>
         </div>
         <div class="wish-add">
           <div class="line">
@@ -1715,7 +1745,9 @@ function normalize() {
   });
   data.wishlist = data.wishlist.filter(w => w && w.id && w.name).map(w => ({
     id: String(w.id), name: String(w.name), memo: w.memo || '', child: CHILDREN.indexOf(w.child) >= 0 ? w.child : 'nayeon',
+    decision: (w.decision === 'ok' || w.decision === 'no') ? w.decision : '',
     bought: !!w.bought,
+    boughtAt: /^\d{4}-\d{2}-\d{2}$/.test(String(w.boughtAt || '')) ? String(w.boughtAt) : '',
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(w.date || '')) ? String(w.date) : '',
     createdAt: Number(w.createdAt) || 0
   }));
@@ -1934,21 +1966,108 @@ function wishWhen(w) {
   if (w && Number(w.createdAt) > 0) return shortStamp(w.createdAt).split(' ')[0];
   return '';
 }
+function wishDayText(key) {
+  const d = String(key || '');
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d.slice(5).replace('-', '/') : '';
+}
+function wishDecisionBadge(w) {
+  if (!w) return '';
+  if (w.decision === 'ok') return '<span class="wish-badge ok">⭕ O</span>';
+  if (w.decision === 'no') return '<span class="wish-badge no">❌ X</span>';
+  return '';
+}
 function renderWishlist() {
-  $('wishCount').textContent = data.wishlist.filter(w => !w.bought).length + '개';
-  const items = data.wishlist.slice().sort((a, b) => (a.bought ? 1 : 0) - (b.bought ? 1 : 0));
-  $('wishList').innerHTML = items.length
-    ? items.map(w => {
+  /* 사준 것(bought)은 메인 칸에서 사라지고 📋 목록보기에서만 보여요 */
+  const pending = data.wishlist.filter(w => !w.bought);
+  $('wishCount').textContent = pending.length + '개';
+  $('wishList').innerHTML = pending.length
+    ? pending.map(w => {
         const when = wishWhen(w);
-        return '<div class="wish' + (w.bought ? ' bought' : '') + '">' +
-        '<input type="checkbox" data-wish-toggle="' + esc(w.id) + '"' + (w.bought ? ' checked' : '') + ' aria-label="' + esc(w.name) + ' 구매 완료">' +
-        '<span class="wish-who ' + CHILD[w.child].name + '">' + CHILD[w.child].emoji + ' ' + CHILD[w.child].name + '</span>' +
-        '<span class="wish-main"><b>' + esc(w.name) + '</b>' + (w.memo ? '<span>' + esc(w.memo) + '</span>' : '') + '</span>' +
-        (when ? '<span class="wish-date">' + esc(when) + '</span>' : '') +
-        '<button class="icon-btn" data-wish-del="' + esc(w.id) + '" aria-label="삭제">✕</button>' +
-      '</div>';
+        const badge = wishDecisionBadge(w);
+        const acts = isAdminUnlocked ? '<span class="wish-acts">' +
+          '<button class="wish-act ok' + (w.decision === 'ok' ? ' on' : '') + '" data-wish-ok="' + esc(w.id) + '" title="' + esc(w.name) + ' · 사준다고 하기" aria-label="' + esc(w.name) + ' O · 사줄게요" aria-pressed="' + (w.decision === 'ok' ? 'true' : 'false') + '">O</button>' +
+          '<button class="wish-act no' + (w.decision === 'no' ? ' on' : '') + '" data-wish-no="' + esc(w.id) + '" title="' + esc(w.name) + ' · 안 사준다고 하기" aria-label="' + esc(w.name) + ' X · 안 사줄게요" aria-pressed="' + (w.decision === 'no' ? 'true' : 'false') + '">X</button>' +
+          '<button class="wish-act buy" data-wish-buy="' + esc(w.id) + '" title="사줬어요 · 📋 목록보기로 옮기기" aria-label="' + esc(w.name) + ' 사줬음">☑️</button>' +
+          '<button class="icon-btn" data-wish-del="' + esc(w.id) + '" aria-label="' + esc(w.name) + ' 삭제">✕</button>' +
+        '</span>' : '';
+        return '<div class="wish">' +
+          '<div class="wish-top">' +
+            '<span class="wish-who ' + CHILD[w.child].name + '">' + CHILD[w.child].emoji + ' ' + CHILD[w.child].name + '</span>' +
+            '<span class="wish-main"><b>' + esc(w.name) + '</b>' + (w.memo ? '<span>' + esc(w.memo) + '</span>' : '') + '</span>' +
+            (when ? '<span class="wish-date">' + esc(when) + '</span>' : '') +
+          '</div>' +
+          ((badge || acts) ? '<div class="wish-foot">' + badge + acts + '</div>' : '') +
+        '</div>';
       }).join('')
     : '<p class="empty">갖고 싶은 걸 적어 보세요 💕</p>';
+}
+
+/* ---------- 📋 사주세요 목록보기 (사준 것까지 모아 보기) ---------- */
+const WISH_HIST_TABS = [
+  { key: 'all', label: '전체' },
+  { key: 'open', label: '⏳ 진행 중' },
+  { key: 'done', label: '✅ 사줬음' }
+];
+let wishHistTab = 'all';
+let wishHistOpen = false;
+
+function wishHistSorted() {
+  return data.wishlist.slice().sort((a, b) =>
+    ((a.bought ? 1 : 0) - (b.bought ? 1 : 0)) || ((Number(b.createdAt) || 0) - (Number(a.createdAt) || 0)));
+}
+function wishHistRow(w) {
+  const c = CHILD[w.child] || CHILD.nayeon;
+  const when = wishWhen(w);
+  const boughtWhen = wishDayText(w.boughtAt) || (w.bought ? when : '');
+  let statuses = '';
+  if (w.decision === 'ok') statuses += '<span class="wish-badge ok">⭕ O</span>';
+  else if (w.decision === 'no') statuses += '<span class="wish-badge no">❌ X</span>';
+  else if (!w.bought) statuses += '<span class="wish-badge wait">⏳ 대기</span>';
+  if (w.bought) statuses += '<span class="wish-badge done">✅ 사줬음' + (boughtWhen ? ' · ' + boughtWhen : '') + '</span>';
+  const acts = isAdminUnlocked
+    ? (w.bought ? '<button class="mini" data-wish-restore="' + esc(w.id) + '" title="사주세요 칸에 다시 넣기">되돌리기</button>' : '') +
+      '<button class="icon-btn" data-wish-hist-del="' + esc(w.id) + '" aria-label="' + esc(w.name) + ' 목록에서 지우기">✕</button>'
+    : '';
+  return '<div class="wh-item' + (w.bought ? ' done' : '') + '">' +
+    '<div class="wh-head">' +
+      '<span class="wish-who ' + c.name + '">' + c.emoji + ' ' + c.name + '</span>' +
+      '<span class="wh-name">' + esc(w.name) + '</span>' +
+      statuses +
+    '</div>' +
+    '<div class="wh-meta">' +
+      '<span>📅 ' + esc(when ? when + ' 신청' : '신청 날짜 없음') + '</span>' +
+      (w.memo ? '<span class="wh-memo">' + esc(w.memo) + '</span>' : '') +
+      (acts ? '<span class="wh-btns">' + acts + '</span>' : '') +
+    '</div>' +
+  '</div>';
+}
+function openWishHistory() {
+  if (document.querySelector('.modal-backdrop')) closeModal();
+  const root = $('modalRoot');
+  if (!root) return;
+  const all = wishHistSorted();
+  const done = all.filter(w => w.bought);
+  const waiting = all.filter(w => !w.bought);
+  const count = { all: all.length, open: waiting.length, done: done.length };
+  const list = wishHistTab === 'done' ? done : (wishHistTab === 'open' ? waiting : all);
+  const emptyMsg = wishHistTab === 'done' ? '아직 사준 게 없어요 🌿'
+    : (wishHistTab === 'open' ? '기다리는 게 없어요 🍀' : '갖고 싶은 걸 적어 보세요 💕');
+  const tabs = WISH_HIST_TABS.map(t =>
+    '<button class="wh-tab' + (wishHistTab === t.key ? ' on' : '') + '" data-wish-hist-tab="' + t.key + '" aria-pressed="' + (wishHistTab === t.key ? 'true' : 'false') + '">' +
+      t.label + ' <b>' + count[t.key] + '</b></button>').join('');
+  root.innerHTML =
+    '<div class="modal-backdrop"><div class="modal wish-hist" role="dialog" aria-modal="true" aria-labelledby="wishHistTitle" data-wish-hist="1">' +
+      '<h2 id="wishHistTitle">📋 사주세요 목록</h2>' +
+      '<div class="modal-sub">' + (all.length
+        ? '전체 ' + all.length + '개 · 진행 중 ' + waiting.length + ' · 사줬음 ' + done.length
+        : '갖고 싶은 것을 모아 두는 곳이에요') + '</div>' +
+      '<div class="wh-tabs">' + tabs + '</div>' +
+      '<div class="wh-list">' + (list.length ? list.map(wishHistRow).join('') : '<p class="wh-empty">' + emptyMsg + '</p>') + '</div>' +
+      '<div class="modal-actions"><button class="btn" data-wish-hist-close="1">닫기</button></div>' +
+    '</div></div>';
+  wishHistOpen = true;
+  const backdrop = root.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
 }
 
 function eventsOn(key) { return data.events.filter(e => String(e.date) <= key && key <= eventEnd(e)); }
@@ -2363,7 +2482,7 @@ function maybeShowReminders() {
       body +
       '<div class="modal-actions"><button class="btn primary" data-dday-ok>확인</button></div>' +
     '</div></div>';
-  const close = () => { root.innerHTML = ''; };
+  const close = () => { clearModalRoot(); };
   const okBtn = root.querySelector('[data-dday-ok]');
   if (okBtn) okBtn.addEventListener('click', close);
   const backdrop = root.querySelector('.modal-backdrop');
@@ -2426,9 +2545,11 @@ function toast(msg, kind) {
   setTimeout(() => el.remove(), 2600);
 }
 
-function closeModal() { $('modalRoot').innerHTML = ''; }
+function clearModalRoot() { $('modalRoot').innerHTML = ''; wishHistOpen = false; }
+function closeModal() { clearModalRoot(); }
 
 function openModal(titleHtml, subHtml, bodyHtml) {
+  wishHistOpen = false;
   $('modalRoot').innerHTML =
     '<div class="modal-backdrop"><div class="modal" role="dialog" aria-modal="true">' +
       '<h2>' + titleHtml + '</h2>' +
@@ -2453,7 +2574,7 @@ function askConfirm(message, okText, danger) {
         '</div>' +
       '</div></div>';
     const root = $('modalRoot');
-    const finish = (v) => { root.innerHTML = ''; resolve(v); };
+    const finish = (v) => { clearModalRoot(); resolve(v); };
     root.querySelector('[data-yes]').addEventListener('click', () => finish(true));
     root.querySelector('[data-no]').addEventListener('click', () => finish(false));
     root.querySelector('.modal-backdrop').addEventListener('click', e => {
@@ -2472,6 +2593,8 @@ function renderAdmin() {
   $('changePinBtn').classList.toggle('hidden', !isAdminUnlocked);
   if ($('childPinsBtn')) $('childPinsBtn').classList.toggle('hidden', !isAdminUnlocked);
   renderNotice();
+  if ($('wishList')) renderWishlist();   /* 잠금을 풀면 O / X / ☑️ 버튼이 바로 나타나요 */
+  refreshWishHistory();
   if (chatOpen) renderChatMessages(true);
 }
 
@@ -2498,7 +2621,7 @@ function askPin(mode) {
       '</div></div>';
     const root = $('modalRoot');
     const val = (id) => (root.querySelector('#' + id) ? root.querySelector('#' + id).value.trim() : '');
-    const done = (v) => { root.innerHTML = ''; resolve(v); };
+    const done = (v) => { clearModalRoot(); resolve(v); };
     const submit = () => {
       const cur = val('pinCur');
       const next = val('pinNew');
@@ -3712,7 +3835,7 @@ function askChildPin(child, rewardId) {
         '</div>' +
       '</div></div>';
     const root = $('modalRoot');
-    const done = (v) => { root.innerHTML = ''; resolve(v); };
+    const done = (v) => { clearModalRoot(); resolve(v); };
     const submit = () => {
       const inp = root.querySelector('#childPinInput');
       const msg = root.querySelector('#childPinMsg');
@@ -3782,7 +3905,7 @@ function addWish() {
   if (!name) { toast('갖고 싶은 것을 적어 주세요 🛒', 'warn'); nameEl.focus(); return; }
   data.wishlist.push({
     id: newId('w'), name: name, memo: (memoEl.value || '').trim(),
-    child: $('wishChild').value, bought: false, date: todayKey()
+    child: $('wishChild').value, decision: '', bought: false, boughtAt: '', date: todayKey(), createdAt: Date.now()
   });
   nameEl.value = '';
   memoEl.value = '';
@@ -3791,24 +3914,75 @@ function addWish() {
   toast('🛒 엄마에게 전달했어요!', 'good');
 }
 
-function toggleWish(id, on) {
-  const w = data.wishlist.find(x => x.id === id);
+function wishById(id) { return data.wishlist.find(w => String(w.id) === String(id)); }
+function refreshWishHistory() { if (wishHistOpen) openWishHistory(); }
+
+/* 엄마·아빠 답: O (사줄게요) / X (안 사줄게요) — 다시 누르면 지워져요 */
+function setWishDecision(id, val) {
+  const w = wishById(id);
   if (!w) return;
   if (!requireAdmin()) { renderWishlist(); return; }
-  w.bought = on;
+  const next = val === 'no' ? 'no' : 'ok';
+  const cleared = w.decision === next;
+  w.decision = cleared ? '' : next;
   renderWishlist();
   save();
-  if (on) toast('🎉 샀어요! ' + w.name, 'good');
+  refreshWishHistory();
+  if (cleared) toast('표시를 지웠어요 · ' + w.name, 'good');
+  else toast((next === 'ok' ? '⭕ O · 사준다고 표시했어요' : '❌ X · 안 사준다고 표시했어요'), 'good');
+}
+
+/* ☑️ 사줬어요: 메인 칸에서 사라지고 📋 목록보기로만 남아요 */
+function markWishBought(id) {
+  const w = wishById(id);
+  if (!w) return;
+  if (!requireAdmin()) return;
+  w.bought = true;
+  w.boughtAt = todayKey();
+  renderWishlist();
+  save();
+  refreshWishHistory();
+  toast('🎉 사줬어요! 📋 목록보기로 옮겼어요', 'good');
+}
+
+/* 📋 목록보기에서 되돌리기: 다시 사주세요 칸으로 */
+function restoreWish(id) {
+  const w = wishById(id);
+  if (!w) return;
+  if (!requireAdmin()) return;
+  w.bought = false;
+  w.boughtAt = '';
+  renderWishlist();
+  save();
+  refreshWishHistory();
+  toast('📋 사주세요 칸으로 되돌렸어요', 'good');
 }
 
 async function delWish(id) {
-  const w = data.wishlist.find(x => x.id === id);
+  const w = wishById(id);
   if (!w) return;
   if (!requireAdmin()) return;
   if (!(await askConfirm("'" + w.name + "'을(를) 목록에서 지울까요?", '지우기', true))) return;
-  data.wishlist = data.wishlist.filter(x => x.id !== id);
+  data.wishlist = data.wishlist.filter(x => String(x.id) !== String(id));
   renderWishlist();
   save();
+  refreshWishHistory();
+}
+
+/* 📋 목록보기 모달에서 지우기 (모달은 하나만: 확인창을 위해 잠시 닫았다가 다시 열어요) */
+async function deleteWishFromHistory(id) {
+  const w = wishById(id);
+  if (!w) return;
+  if (!requireAdmin()) return;
+  wishHistOpen = false;
+  closeModal();
+  const ok = await askConfirm("'" + w.name + "'을(를) 목록에서 지울까요?", '지우기', true);
+  if (!ok) { openWishHistory(); return; }
+  data.wishlist = data.wishlist.filter(x => String(x.id) !== String(id));
+  renderWishlist();
+  save();
+  openWishHistory();
+  toast('목록에서 지웠어요', 'good');
 }
 
 /* 엄마·아빠가 직접 주는 보너스 포인트 (+ 보너스 / - 벌점) */
@@ -4195,11 +4369,7 @@ document.addEventListener('change', e => {
     }
     return;
   }
-  if (t.matches('[data-wish-toggle]')) {
-    toggleWish(t.dataset.wishToggle, t.checked);
-  }
 });
-
 document.addEventListener('click', async e => {
   const t = e.target.closest ? e.target.closest('button, [data-date]') : null;
   if (!t) return;
@@ -4215,6 +4385,14 @@ document.addEventListener('click', async e => {
   if (t.dataset.reward) { redeemReward(t.dataset.child, t.dataset.reward); return; }
   if (t.dataset.undoRedeem) { undoRedeem(t.dataset.undoRedeem); return; }
   if (t.dataset.wishDel) { delWish(t.dataset.wishDel); return; }
+  if (t.id === 'wishHistBtn') { openWishHistory(); return; }
+  if (t.dataset.wishHistTab) { wishHistTab = t.dataset.wishHistTab; openWishHistory(); return; }
+  if (t.dataset.wishHistClose !== undefined) { closeModal(); return; }
+  if (t.dataset.wishOk) { setWishDecision(t.dataset.wishOk, 'ok'); return; }
+  if (t.dataset.wishNo) { setWishDecision(t.dataset.wishNo, 'no'); return; }
+  if (t.dataset.wishBuy) { markWishBought(t.dataset.wishBuy); return; }
+  if (t.dataset.wishRestore) { restoreWish(t.dataset.wishRestore); return; }
+  if (t.dataset.wishHistDel) { deleteWishFromHistory(t.dataset.wishHistDel); return; }
   if (t.dataset.editEvent) { allEventsReturn = !!t.dataset.fromAll; openEventEditor(t.dataset.editEvent); return; }
   if (t.dataset.delEvent) { allEventsReturn = !!t.dataset.fromAll; delEvent(t.dataset.delEvent); return; }
   if (t.dataset.date) { openDay(t.dataset.date); return; }
