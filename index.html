@@ -451,6 +451,61 @@ select{
 body.admin-locked .reward-del,
 body.admin-locked .reward-add{display:none!important}
 
+/* 🎁 포인트 선물하기 (잠금과 상관없이 아이들이 서로 주고받아요) */
+.gift-open{
+  display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+  margin-top:9px; padding:9px 10px; border-radius:12px; font-family:inherit; cursor:pointer;
+  border:1px dashed #efd9b4; background:linear-gradient(180deg,#fffaf0,#fff4e2);
+  color:#8a6520; font-size:12.5px; font-weight:900; letter-spacing:.01em;
+  box-shadow:0 2px 8px rgba(200,165,110,.1); transition:.16s;
+}
+.gift-open:hover{background:linear-gradient(180deg,#fff6e6,#ffeed4); border-color:#e8cfa4}
+.gift-open:active{transform:scale(.99)}
+.gift-who{display:flex; align-items:stretch; gap:7px; margin-top:14px}
+.gift-side{
+  flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  border:1px solid #f2e7d4; background:#fffdf8; border-radius:16px; padding:9px 8px;
+}
+.gift-label{font-size:10px; font-weight:900; color:var(--muted); letter-spacing:.04em}
+.gift-pick{display:flex; flex-direction:column; gap:4px; width:100%}
+.gift-pick-btn{
+  font-family:inherit; font-size:12px; font-weight:800; color:var(--ink2); cursor:pointer;
+  border:1px solid #efe4d1; background:#fff; border-radius:10px; padding:6px 6px; transition:.15s;
+}
+.gift-pick-btn.on{
+  color:#8a6520; border-color:#f0d9ae; background:linear-gradient(135deg,#fff4da,#ffe7c0);
+  box-shadow:0 2px 8px rgba(220,180,110,.18);
+}
+.gift-bal{font-size:10px; font-weight:800; color:#a98c58; font-variant-numeric:tabular-nums; white-space:nowrap}
+.gift-arrow{align-self:center; font-size:17px; color:#d8c3a0; font-weight:900}
+.gift-to{font-size:14px; font-weight:900; color:var(--ink); white-space:nowrap}
+.gift-side-to{background:linear-gradient(180deg,#fffdf8,#fff8ec)}
+.gift-points{margin-top:13px; text-align:left}
+.gift-points label{display:block; font-size:11px; font-weight:800; color:var(--muted); margin-bottom:4px}
+.gift-points-row{display:flex; align-items:center; gap:6px}
+.gift-points-row input{
+  flex:1; min-width:0; font-size:16px; font-weight:900; color:#a8792f; text-align:center;
+  padding:9px 10px; border-radius:12px; background:#fffdf9; font-variant-numeric:tabular-nums;
+}
+.gift-points-row .gift-unit{font-size:13px; font-weight:900; color:#a8792f}
+.gift-chips{display:flex; gap:5px; margin-top:6px}
+.gift-chip{
+  flex:1; min-width:0; font-family:inherit; font-size:11px; font-weight:900; color:#8a6520; cursor:pointer;
+  border:1px solid #f0e0c4; background:#fffaf0; border-radius:99px; padding:5px 2px; transition:.15s;
+}
+.gift-chip:hover,.gift-chip.on{background:linear-gradient(135deg,#fff2d6,#ffe6bd); border-color:#eccf9f}
+.gift-note-msg{margin-top:6px}
+.gift-recent{margin-top:14px; padding-top:9px; border-top:1px dashed #f0e4cf}
+.gift-recent-title{font-size:10px; font-weight:900; color:var(--muted); letter-spacing:.04em; margin-bottom:4px}
+.gift-recent-row{
+  display:flex; align-items:center; gap:6px; font-size:11px; padding:5px 8px; border-radius:9px;
+  background:#faf5ea; margin-top:3px;
+}
+.gift-recent-row .gr-who{font-weight:900; color:#8a6520; white-space:nowrap}
+.gift-recent-row .gr-main{flex:1; min-width:0; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gift-recent-row .gr-pts{font-weight:900; color:#a8792f; font-variant-numeric:tabular-nums; white-space:nowrap}
+.gift-empty{font-size:11px; color:#b0a695; text-align:center; padding:4px 0}
+
 /* ---------------- notice ---------------- */
 .notice{
   font-size:11px; color:#a89f92; line-height:1.7; margin:16px 4px 0; padding-top:12px;
@@ -1287,6 +1342,7 @@ body.admin-locked .manual{padding-right:8px}
         </select>
         <p class="shop-pin-hint">🔐 교환할 때 그 아이의 비밀번호 4자리를 넣어요</p>
         <div class="shop-grid" id="rewards"></div>
+        <button class="gift-open" id="giftOpenBtn" aria-label="나연이와 가빈이 포인트 선물하기">🎁 포인트 선물하기</button>
         <div class="reward-add">
           <div class="line">
             <input id="rewardEmoji" maxlength="4" placeholder="🍭" aria-label="보상 아이콘">
@@ -1429,6 +1485,9 @@ const STUDY_PRESETS = ['수학', '영어', '주산', '한자', '독서', '일기
 const STUDY_MIN_PRESETS = [10, 20, 30, 45];
 const STUDY_LOGS_MAX = 300;   /* 보관할 공부 기록 수 */
 const STUDY_LIST_MAX = 8;     /* 모달에 보여 줄 최근 기록 수 */
+/* 🎁 포인트 선물: 보관할 선물 기록 수 (잔액 계산에 쓰이므로 넉넉히) */
+const POINT_GIFTS_MAX = 300;
+const GIFT_NOTE_MAX = 30;
 
 /* ============================================================
    🇰🇷 한국 공휴일 (2025~2028)
@@ -1542,7 +1601,7 @@ const validDateKey = (s) => {
   return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
 };
 
-const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], studyLogs: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
+const fresh = () => ({ daily: {}, redemptions: [], events: [], wishlist: [], manualPoints: [], pointGifts: [], studyLogs: [], customTasks: {}, customBonuses: {}, allClear: {}, chat: [], notice: null, noticeHistory: [] });
 let data = fresh();
 let uid = null;
 let unsub = null;
@@ -1664,6 +1723,24 @@ function normalize() {
     }))
     .sort((a, b) => a.createdAt - b.createdAt)
     .slice(-200) : [];
+  /* 🎁 포인트 선물: 나연 ↔ 가빈 사이에 옮긴 포인트. 보낸 사람은 빠지고 받은 사람은 늘어요 */
+  data.pointGifts = Array.isArray(data.pointGifts) ? data.pointGifts
+    .filter(g => g && g.id && CHILDREN.indexOf(g.from) >= 0 && CHILDREN.indexOf(g.to) >= 0
+      && g.from !== g.to && Number.isFinite(Number(g.points)) && Math.round(Number(g.points)) > 0)
+    .map(g => {
+      const created = Number(g.createdAt) || 0;
+      return {
+        id: String(g.id),
+        from: g.from,
+        to: g.to,
+        points: Math.round(Number(g.points)),
+        note: String(g.note == null ? '' : g.note).trim().slice(0, GIFT_NOTE_MAX),
+        date: validDateKey(String(g.date || '')) ? String(g.date) : (created ? keyOf(new Date(created)) : todayKey()),
+        createdAt: created
+      };
+    })
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .slice(-POINT_GIFTS_MAX) : [];
   data.customRewards = Array.isArray(data.customRewards) ? data.customRewards
     .filter(r => r && r.id && r.name && Number(r.cost) > 0)
     .map(r => ({
@@ -1799,8 +1876,18 @@ function manualTotal(child) {
 function totalSpent(child) {
   return data.redemptions.filter(r => r.child === child).reduce((n, r) => n + (Number(r.cost) || 0), 0);
 }
+/* 🎁 선물로 보낸 포인트는 마이너스, 받은 포인트는 플러스 */
+function giftTotal(child) {
+  let sum = 0;
+  (data.pointGifts || []).forEach(g => {
+    const pts = Number(g.points) || 0;
+    if (g.from === child) sum -= pts;
+    if (g.to === child) sum += pts;
+  });
+  return sum;
+}
 function balance(child) {
-  return Math.max(0, totalEarned(child) - totalSpent(child));
+  return Math.max(0, totalEarned(child) - totalSpent(child) + giftTotal(child));
 }
 function levelInfo(child) {
   const total = Math.max(0, totalEarned(child));   /* 벌점으로 마이너스가 되어도 레벨은 1 이상 */
@@ -3174,6 +3261,13 @@ function ledgerEntries() {
       const neg = pts < 0;
       add(ledgerKeyOf(p.createdAt), child, neg ? '⚠️' : '💝', neg ? '벌점 · ' + p.name : p.name, pts, 5, neg ? 'penalty' : '', p.by);
     });
+    /* 🎁 선물: 보낸 사람은 -포인트(사용), 받은 사람은 +포인트(적립) */
+    (data.pointGifts || []).forEach(g => {
+      if (g.from !== child && g.to !== child) return;
+      const out = g.from === child;
+      const label = CHILD[g.from].name + ' → ' + CHILD[g.to].name + ' 선물' + (g.note ? ' · ' + g.note : '');
+      add(ledgerKeyOf(g.createdAt) || g.date, child, '🎁', label, out ? -(Number(g.points) || 0) : (Number(g.points) || 0), 5.5, out ? 'spend' : '');
+    });
     (data.redemptions || []).forEach(r => {
       if (r.child !== child) return;
       add(r.date, child, '🛍️', r.name, -(Number(r.cost) || 0), 6, 'spend');
@@ -3888,6 +3982,189 @@ function playBuyChime() {
   } catch (e) { /* 소리를 못 내는 브라우저에서도 교환은 그대로 */ }
 }
 
+/* ============================================================
+   🎁 포인트 선물하기 (나연 ↔ 가빈)
+   - 보낸 사람 잔액에서 빠지고 받는 사람 잔액에 그대로 붙어요
+   - 보내는 사람의 상점 비밀번호 4자리를 넣어야 보낼 수 있어요
+   ============================================================ */
+function otherChild(child) { return child === 'gabin' ? 'nayeon' : 'gabin'; }
+function giftBalLine(child) {
+  return CHILD[child].name + ' 잔액 ' + fmt(balance(child)) + 'P';
+}
+function giftRecentHtml() {
+  const list = (data.pointGifts || []).slice(-3).reverse();
+  if (!list.length) return '<p class="gift-empty">아직 주고받은 선물이 없어요 🌱</p>';
+  return '<div class="gift-recent-title">최근 선물</div>' + list.map(g =>
+    '<div class="gift-recent-row">' +
+      '<span class="gr-who">' + CHILD[g.from].emoji + ' → ' + CHILD[g.to].emoji + '</span>' +
+      '<span class="gr-main">' + esc(g.note || '포인트 선물') + '</span>' +
+      '<span class="gr-pts">' + fmt(g.points) + 'P</span>' +
+    '</div>').join('');
+}
+
+/* 선물 보내기 본체 — 모달도 테스트도 이 함수를 거쳐요 */
+function givePointGift(from, to, points, note, pin) {
+  if (CHILDREN.indexOf(from) < 0 || CHILDREN.indexOf(to) < 0) return { ok: false, reason: 'who' };
+  if (from === to) return { ok: false, reason: 'same' };
+  const pts = Math.round(Number(points));
+  if (!Number.isFinite(pts) || pts <= 0) return { ok: false, reason: 'points' };
+  if (!verifyChildPin(from, pin)) return { ok: false, reason: 'pin' };
+  const bal = balance(from);
+  if (pts > bal) return { ok: false, reason: 'balance', balance: bal };
+  const gift = {
+    id: newId('gift'),
+    from: from,
+    to: to,
+    points: pts,
+    note: String(note == null ? '' : note).trim().slice(0, GIFT_NOTE_MAX),
+    date: todayKey(),
+    createdAt: Date.now()
+  };
+  if (!Array.isArray(data.pointGifts)) data.pointGifts = [];
+  data.pointGifts.push(gift);
+  data.pointGifts = data.pointGifts.slice(-POINT_GIFTS_MAX);
+  renderAll();
+  save();
+  toast('🎁 ' + CHILD[from].name + ' → ' + CHILD[to].name + ' ' + fmt(pts) + 'P 선물 완료!', 'good');
+  playBuyChime();
+  return { ok: true, gift: gift };
+}
+
+/* 한 번에 모달 하나 규칙: 다른 창이 떠 있으면 열지 않아요 */
+function openPointGift() {
+  if (document.querySelector('.modal-backdrop')) return;
+  const shopSel = $('shopChild') ? $('shopChild').value : 'nayeon';
+  let from = CHILDREN.indexOf(shopSel) >= 0 ? shopSel : 'nayeon';
+  const to = () => otherChild(from);
+  const root = $('modalRoot');
+  root.innerHTML =
+    '<div class="modal-backdrop"><div class="modal gift-modal" role="dialog" aria-modal="true" aria-labelledby="giftTitle">' +
+      '<button class="icon-btn modal-close" data-gift-cancel aria-label="닫기">✕</button>' +
+      '<h2 id="giftTitle">🎁 포인트 선물하기</h2>' +
+      '<div class="modal-sub">나연이와 가빈이가 서로 포인트를 나눠 줘요</div>' +
+      '<div class="gift-who">' +
+        '<div class="gift-side">' +
+          '<span class="gift-label">보내는 사람</span>' +
+          '<div class="gift-pick" id="giftPick">' +
+            CHILDREN.map(c => '<button type="button" class="gift-pick-btn' + (from === c ? ' on' : '') + '" data-gift-from="' + c + '" aria-pressed="' + (from === c ? 'true' : 'false') + '">' + CHILD[c].emoji + ' ' + CHILD[c].name + '</button>').join('') +
+          '</div>' +
+          '<span class="gift-bal" id="giftBal">' + esc(giftBalLine(from)) + '</span>' +
+        '</div>' +
+        '<div class="gift-arrow" aria-hidden="true">→</div>' +
+        '<div class="gift-side gift-side-to">' +
+          '<span class="gift-label">받는 사람</span>' +
+          '<div class="gift-to" id="giftTo">' + CHILD[to()].emoji + ' ' + CHILD[to()].name + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="gift-points">' +
+        '<label for="giftPoints">보낼 포인트</label>' +
+        '<div class="gift-points-row">' +
+          '<input id="giftPoints" type="number" inputmode="numeric" min="1" max="100000" step="10" value="100" aria-label="보낼 포인트">' +
+          '<span class="gift-unit">P</span>' +
+        '</div>' +
+        '<div class="gift-chips" id="giftChips">' +
+          [100, 200, 300, 500].map(n => '<button type="button" class="gift-chip" data-gift-chip="' + n + '" aria-pressed="false">' + n + 'P</button>').join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="edit-field gift-note-msg">' +
+        '<label for="giftNote">메시지 (선택)</label>' +
+        '<input id="giftNote" maxlength="' + GIFT_NOTE_MAX + '" placeholder="고마워! 같이 먹자" aria-label="선물 메시지 (선택)">' +
+      '</div>' +
+      '<div class="pin-field">' +
+        '<label for="giftPin" id="giftPinLabel">' + CHILD[from].name + ' 비밀번호 4자리</label>' +
+        '<input id="giftPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="보내는 사람 비밀번호 4자리">' +
+      '</div>' +
+      '<p class="pin-msg" id="giftMsg"></p>' +
+      '<div class="gift-recent" id="giftRecent">' + giftRecentHtml() + '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn" data-gift-cancel>취소</button>' +
+        '<button class="btn primary" data-gift-send>🎁 선물하기</button>' +
+      '</div>' +
+    '</div></div>';
+
+  const q = sel => root.querySelector(sel);
+  const setMsg = (text, bad) => {
+    const el = q('#giftMsg');
+    if (!el) return;
+    el.className = 'pin-msg' + (bad ? ' err' : '');
+    el.textContent = text;
+  };
+  const shake = () => {
+    const box = q('.modal');
+    if (box && box.classList) { box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+  };
+  const paintFrom = () => {
+    root.querySelectorAll('[data-gift-from]').forEach(b => {
+      const on = b.getAttribute('data-gift-from') === from;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    const toEl = q('#giftTo');
+    if (toEl) toEl.textContent = CHILD[to()].emoji + ' ' + CHILD[to()].name;
+    const balEl = q('#giftBal');
+    if (balEl) balEl.textContent = giftBalLine(from);
+    const pinLabel = q('#giftPinLabel');
+    if (pinLabel) pinLabel.textContent = CHILD[from].name + ' 비밀번호 4자리';
+  };
+  setMsg(CHILD[from].name + ' 비밀번호 4자리를 넣으면 선물할 수 있어요');
+
+  const submit = () => {
+    const ptsEl = q('#giftPoints');
+    const noteEl = q('#giftNote');
+    const pinEl = q('#giftPin');
+    const pin = pinEl ? String(pinEl.value || '').trim() : '';
+    if (!validChildPin(pin)) { setMsg('숫자 4자리로 입력해 주세요.', true); if (pinEl) pinEl.focus(); return; }
+    const res = givePointGift(from, to(), ptsEl ? ptsEl.value : '', noteEl ? noteEl.value : '', pin);
+    if (res.ok) { clearModalRoot(); return; }
+    if (res.reason === 'pin') {
+      setMsg('비밀번호가 맞지 않아요. 다시 넣어 주세요.', true);
+      if (pinEl) { pinEl.value = ''; pinEl.focus(); }
+      shake();
+      return;
+    }
+    if (res.reason === 'balance') {
+      setMsg(CHILD[from].name + ' 잔액은 ' + fmt(res.balance) + 'P예요. 그보다 적게 보내 주세요.', true);
+      shake();
+      return;
+    }
+    setMsg('보낼 포인트를 1P 이상 숫자로 넣어 주세요.', true);
+    shake();
+  };
+
+  const pick = q('#giftPick');
+  if (pick) pick.addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('[data-gift-from]') : null;
+    if (!b) return;
+    const next = b.getAttribute('data-gift-from');
+    if (CHILDREN.indexOf(next) < 0) return;
+    from = next;
+    paintFrom();
+    setMsg(CHILD[from].name + ' 비밀번호 4자리를 넣으면 선물할 수 있어요');
+  });
+  const chips = q('#giftChips');
+  if (chips) chips.addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('[data-gift-chip]') : null;
+    if (!b) return;
+    const amt = Number(b.getAttribute('data-gift-chip')) || 0;
+    const ptsEl = q('#giftPoints');
+    if (ptsEl && amt > 0) ptsEl.value = String(amt);
+    chips.querySelectorAll('[data-gift-chip]').forEach(x => {
+      const on = x === b;
+      if (x.classList) x.classList.toggle('on', on);
+      if (x.setAttribute) x.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
+  const sendBtn = q('[data-gift-send]');
+  if (sendBtn) sendBtn.addEventListener('click', submit);
+  root.querySelectorAll('[data-gift-cancel]').forEach(b => b.addEventListener('click', () => clearModalRoot()));
+  const backdrop = q('.modal-backdrop');
+  if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) clearModalRoot(); });
+  const pinEl0 = q('#giftPin');
+  if (pinEl0) pinEl0.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  const ptsEl0 = q('#giftPoints');
+  if (ptsEl0) ptsEl0.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+}
+
 async function undoRedeem(id) {
   const r = data.redemptions.find(x => x.id === id);
   if (!r) return;
@@ -4423,6 +4700,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.undoManual) { undoManualPoints(t.dataset.undoManual); return; }
   if (t.id === 'rewardAddBtn') { addReward(); return; }
   if (t.dataset.delReward) { delReward(t.dataset.delReward); return; }
+  if (t.id === 'giftOpenBtn') { openPointGift(); return; }
   if (t.id === 'ledgerBtn') { openLedger(); return; }
   if (t.id === 'studyTimerBtn') { openStudyTimer(); return; }
   if (t.dataset.studyWho) { studyPickWho(t.dataset.studyWho); return; }
