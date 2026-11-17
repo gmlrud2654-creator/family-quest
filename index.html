@@ -1502,7 +1502,9 @@ const CHILD = {
 const CHILD_PIN_DEFAULT = { nayeon: '1111', gabin: '2222' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const DEFAULT_TASKS = ['주산', '영어', '수학', '한자', '받아쓰기', '독서', '일기', '독해']
-  .map((name, i) => ({ id: 'd' + i, name: name, points: 20 }));
+  .map((name, i) => ({ id: 'd' + i, name: name, points: 20 }))
+  /* ➕ 1% 연산: 하루 한 장씩 짧게 하는 연산 문제라 10P */
+  .concat([{ id: 'd8', name: '1% 연산', points: 10 }]);
 const DEFAULT_BONUSES = ['단원평가 100점', '영어시험 100점', '받아쓰기 100점']
   .map((name, i) => ({ id: 'b' + i, name: name, points: 100 }));
 const REWARDS = [
@@ -1548,7 +1550,7 @@ const CHAT_PEOPLE = [
 ];
 const CHAT_MAX = 100;
 /* ⏱️ 공부 타이머 */
-const STUDY_PRESETS = ['수학', '영어', '주산', '한자', '독서', '일기/받아쓰기', '숙제'];
+const STUDY_PRESETS = ['수학', '1% 연산', '영어', '주산', '한자', '독서', '일기/받아쓰기', '숙제'];
 const STUDY_MIN_PRESETS = [10, 20, 30, 45];
 const STUDY_LOGS_MAX = 300;   /* 보관할 공부 기록 수 */
 const STUDY_LIST_MAX = 8;     /* 모달에 보여 줄 최근 기록 수 */
@@ -1678,6 +1680,7 @@ let lastToday = todayKey();
 let writing = 0;
 let idleTimer = null;
 let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
+let seededTaskAdded = false;   /* 이번 불러오기에서 '1% 연산'을 넣었는지 — 바로 저장해서 다른 기기에도 남깁니다 */
 let allEventsReturn = false;   /* 전체 일정 모달에서 수정·삭제했을 때 다시 그 모달로 돌아가기 */
 
 /* 가족 채팅방 상태 (선택한 이름과 마지막으로 본 시각은 이 기기에만 저장) */
@@ -1911,6 +1914,19 @@ function normalize() {
     if (data.customBonuses[c] !== undefined && !Array.isArray(data.customBonuses[c])) delete data.customBonuses[c];
     if (data.allClear[c] && typeof data.allClear[c] !== 'object') data.allClear[c] = {};
   });
+  /* ➕ '1% 연산'(10P) 한 번만 넣기 — 이미 저장해 둔 퀘스트 목록에도 나타나게 합니다.
+     settings.seeded1PctOp 로 딱 한 번만 넣고, 나중에 부모가 ✕로 지우면 다시 넣지 않아요 */
+  seededTaskAdded = false;
+  if (!data.settings.seeded1PctOp) {
+    CHILDREN.forEach(c => {
+      const list = data.customTasks[c];
+      if (!Array.isArray(list)) return;                 /* 저장된 목록이 없으면 기본 퀘스트에 이미 들어 있어요 */
+      if (list.some(q => q && (q.id === 'd8' || q.name === '1% 연산'))) return;
+      data.customTasks[c] = list.concat([{ id: 'd8', name: '1% 연산', points: 10 }]);
+      seededTaskAdded = true;
+    });
+    data.settings.seeded1PctOp = true;
+  }
   /* ⭐ 레벨 기억: 레벨 기준을 바꾸기 전에 이미 오른 레벨은 그대로 지켜 줍니다 (처음 한 번만 기록) */
   const hadFloor = data.settings.levelFloor && typeof data.settings.levelFloor === 'object';
   const oldFloor = hadFloor ? data.settings.levelFloor : {};
@@ -4816,7 +4832,7 @@ onAuthStateChanged(auth, user => {
     tick();
     scheduleReminders();
     setStatus('모든 기기와 동기화됨', 'ok');
-    if (!snap.exists()) save();
+    if (!snap.exists() || seededTaskAdded) save();
     resetIdle();
   }, err => {
     setStatus('Firestore 오류: ' + err.message, 'err');
