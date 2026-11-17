@@ -269,6 +269,12 @@ select{
 .child-card.pink{--acc:#e79aae; --acc-soft:#fde8ee; --acc-ink:#a8617a; --check:#a99ad6}
 .child-card.mint{--acc:#7fb08a; --acc-soft:#e6f2e7; --acc-ink:#467553; --check:#7fb08a}
 .person{display:flex; align-items:center; gap:10px; position:relative; z-index:1}
+.avatar-wrap{position:relative; flex:0 0 auto; display:block}
+.char-dot{
+  position:absolute; right:-4px; bottom:-3px; width:22px; height:22px; border-radius:50%;
+  background:#fffdf8; border:1.5px solid #fff; box-shadow:0 2px 6px rgba(150,120,100,.25);
+  display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1;
+}
 .avatar{width:52px; height:52px; flex:0 0 auto; border-radius:17px; overflow:hidden; box-shadow:0 4px 12px rgba(160,130,140,.16), inset 0 0 0 1px #fff9}
 .avatar svg{display:block; width:100%; height:100%}
 .who{flex:1; min-width:0}
@@ -1190,7 +1196,8 @@ body.admin-locked .manual{padding-right:8px}
     <section class="col">
       <article class="card child-card pink" data-child="nayeon">
         <div class="person">
-          <div class="avatar">
+          <span class="avatar-wrap">
+            <div class="avatar">
             <svg viewBox="0 0 64 64" aria-hidden="true">
               <defs><linearGradient id="bnBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9ee"/><stop offset="1" stop-color="#ffd2dd"/></linearGradient></defs>
               <circle cx="32" cy="32" r="32" fill="url(#bnBg)"/>
@@ -1209,7 +1216,9 @@ body.admin-locked .manual{padding-right:8px}
               <path d="M32 40.5v1.5M32 42c-.9 1.3-2.6 1.2-3.2.1M32 42c.9 1.3 2.6 1.2 3.2.1" stroke="#e0798f" stroke-width="1.05" fill="none" stroke-linecap="round"/>
               <path d="M15 30l1.4 2.6 2.8.5-2 2 .4 2.8-2.6-1.3-2.6 1.3.4-2.8-2-2 2.8-.5z" fill="#fff" opacity=".85"/>
             </svg>
-          </div>
+            </div>
+            <span class="char-dot" aria-hidden="true">🐰</span>
+          </span>
           <div class="who">
             <h2><span class="emo">🐰</span> 나연</h2>
             <div class="sub">토끼처럼 폴짝폴짝</div>
@@ -1272,7 +1281,8 @@ body.admin-locked .manual{padding-right:8px}
     <section class="col">
       <article class="card child-card mint" data-child="gabin">
         <div class="person">
-          <div class="avatar">
+          <span class="avatar-wrap">
+            <div class="avatar">
             <svg viewBox="0 0 64 64" aria-hidden="true">
               <defs><linearGradient id="sqBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ebf7ec"/><stop offset="1" stop-color="#cfe9d6"/></linearGradient></defs>
               <circle cx="32" cy="32" r="32" fill="url(#sqBg)"/>
@@ -1292,7 +1302,9 @@ body.admin-locked .manual{padding-right:8px}
               <ellipse cx="40.2" cy="36.4" rx="2.7" ry="1.9" fill="#ffc0ad" opacity=".9"/>
               <circle cx="45.5" cy="20" r="1.5" fill="#fff" opacity=".8"/>
             </svg>
-          </div>
+            </div>
+            <span class="char-dot" aria-hidden="true">🐿️</span>
+          </span>
           <div class="who">
             <h2><span class="emo">🐿️</span> 가빈</h2>
             <div class="sub">다람쥐처럼 부지런히</div>
@@ -2112,6 +2124,8 @@ function renderChild(child) {
     chip.innerHTML = '🐾 파트너 <b>' + mate.emoji + ' ' + mate.name + '</b>';
     chip.setAttribute('aria-label', CHILD[child].name + ' 파트너 캐릭터 바꾸기 (지금 ' + mate.name + ')');
   }
+  const dot = card.querySelector('.char-dot');
+  if (dot) dot.textContent = mate.emoji;
   /* 올라간 레벨은 기억해 두어서, 레벨 기준이 바뀌어도 레벨이 내려가지 않게 */
   if (lv.lv > levelFloor(child) && data.settings && data.settings.levelFloor) {
     data.settings.levelFloor[child] = lv.lv;
