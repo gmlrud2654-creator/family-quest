@@ -4284,6 +4284,8 @@ if ($('eventDate')) $('eventDate').addEventListener('change', () => {
   if (validDateKey(start)) $('eventEndDate').min = start;
   if (start && $('eventEndDate').value && $('eventEndDate').value <= start) $('eventEndDate').value = '';
 });
+/* 보상 상점: 포인트를 쓸 아이를 바꾸면 잔액·보상 버튼을 그 아이 기준으로 다시 그려요 */
+if ($('shopChild')) $('shopChild').addEventListener('change', renderShop);
 if ($('manualSign')) $('manualSign').addEventListener('change', syncManualSignUI);
 syncManualSignUI();
 if ($('manualBy')) $('manualBy').addEventListener('change', () => manualByStore(manualByValue()));
