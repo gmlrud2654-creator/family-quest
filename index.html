@@ -548,6 +548,38 @@ body.admin-locked .reward-add{display:none!important}
 .dex-progress{display:flex; align-items:center; gap:7px; margin-top:13px; font-size:11px; color:var(--muted)}
 .dex-progress .bar{flex:1; height:7px; border-radius:99px; background:#f0e9dd; overflow:hidden}
 .dex-progress .bar i{display:block; height:100%; background:linear-gradient(90deg,#ffd9a2,#f6a9bd); border-radius:99px}
+/* 🐾 보유 캐릭터 (내 파트너) */
+.char-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+.char-item{
+  position:relative; border-radius:13px; padding:7px 3px 6px; text-align:center; cursor:pointer; font:inherit;
+  background:#fbf8f2; border:1px dashed #e7dbc7; transition:.15s;
+}
+.char-item.on{background:linear-gradient(180deg,#fffaf0,#fff5e6); border:1px solid #f2dfbc; box-shadow:0 3px 10px rgba(200,165,110,.13)}
+.char-item.on:hover{transform:translateY(-1px); box-shadow:0 5px 12px rgba(200,165,110,.2)}
+.char-item.sel{outline:2px solid #e9a94f; outline-offset:-1px; background:linear-gradient(180deg,#fff7e6,#ffe9c7); box-shadow:0 4px 12px rgba(220,170,90,.24)}
+.char-item.off{cursor:default}
+.char-item .ce{font-size:23px; line-height:1.2; display:block}
+.char-item.off .ce{filter:grayscale(1) blur(1.2px); opacity:.35}
+.char-item .cn{font-size:9.5px; font-weight:800; color:var(--ink2); margin-top:2px; display:block}
+.char-item.off .cn{color:#c2b9ab}
+.char-item .cs{font-size:8.5px; color:#b0a695; display:block; margin-top:1px}
+.char-item.sel .cs{color:#c4852a; font-weight:900}
+.char-item .lock{position:absolute; top:4px; right:5px; font-size:9px; opacity:.75}
+.char-hint{font-size:9.5px; color:#a99a80; margin-top:7px; text-align:center; line-height:1.5}
+.char-hint b{color:#c4852a}
+.dex-done{
+  margin-top:12px; border-radius:14px; padding:10px 12px; text-align:center; font-size:12px; font-weight:900; color:#8a5a1d;
+  background:linear-gradient(135deg,#fff3d1,#ffe0ea); border:1px solid #f3ddb4; box-shadow:0 4px 14px rgba(220,180,120,.2);
+}
+/* 메인 카드의 파트너 칩 */
+.partner-row{position:relative; z-index:1; margin-top:8px}
+.partner-chip{
+  border:1px solid var(--acc); background:rgba(255,255,255,.9); border-radius:99px; padding:3px 10px 3px 8px; cursor:pointer;
+  font-size:10.5px; font-weight:800; color:var(--acc-ink); display:inline-flex; align-items:center; gap:4px;
+  box-shadow:0 2px 6px rgba(160,130,140,.14); transition:.16s;
+}
+.partner-chip:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(160,130,140,.2)}
+.partner-chip b{font-weight:900}
 
 /* ---------------- toast ---------------- */
 #toastRoot{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:7px; align-items:center; pointer-events:none}
@@ -1184,11 +1216,14 @@ body.admin-locked .manual{padding-right:8px}
           </div>
           <button class="dex-badge" data-dex="nayeon">📖 도감 <b>0/12</b></button>
         </div>
+        <div class="partner-row">
+          <button class="partner-chip" data-chardex="nayeon" aria-label="나연 파트너 캐릭터 바꾸기">🐾 파트너 <b>🐰 토끼</b></button>
+        </div>
         <div class="level-row">
           <span class="lv">Lv.1</span>
           <div class="xp">
             <div class="xp-bar"><i style="width:0%"></i></div>
-            <div class="xp-txt">0 / 100</div>
+            <div class="xp-txt">0 / 200</div>
           </div>
         </div>
         <div class="stats">
@@ -1264,11 +1299,14 @@ body.admin-locked .manual{padding-right:8px}
           </div>
           <button class="dex-badge" data-dex="gabin">📖 도감 <b>0/12</b></button>
         </div>
+        <div class="partner-row">
+          <button class="partner-chip" data-chardex="gabin" aria-label="가빈 파트너 캐릭터 바꾸기">🐾 파트너 <b>🐿️ 다람쥐</b></button>
+        </div>
         <div class="level-row">
           <span class="lv">Lv.1</span>
           <div class="xp">
             <div class="xp-bar"><i style="width:0%"></i></div>
-            <div class="xp-txt">0 / 100</div>
+            <div class="xp-txt">0 / 200</div>
           </div>
         </div>
         <div class="stats">
@@ -1475,6 +1513,21 @@ const DEX = [
   { id: 'whale',   name: '아기고래',    emoji: '🐳', kind: 'allclear', need: 10, label: '올클리어 10일' },
   { id: 'unicorn', name: '유니콘',      emoji: '🦄', kind: 'allclear', need: 15, label: '올클리어 15일' }
 ];
+/* 🐾 파트너 캐릭터
+   - 기본 친구(토끼·다람쥐)는 처음부터 고를 수 있어요
+   - 나머지 친구들은 도감 12/12 를 모두 모으면 열려요 */
+const CHARS = [
+  { id: 'rabbit',   name: '토끼',    emoji: '🐰', starter: true },
+  { id: 'squirrel', name: '다람쥐',  emoji: '🐿️', starter: true },
+  { id: 'turtle',   name: '거북이',  emoji: '🐢' },
+  { id: 'dog',      name: '강아지',  emoji: '🐶' },
+  { id: 'cat',      name: '고양이',  emoji: '🐱' },
+  { id: 'penguin',  name: '펭귄',    emoji: '🐧' },
+  { id: 'lion',     name: '사자',    emoji: '🦁' }
+];
+/* 아이별 처음 파트너 */
+const CHAR_STARTER = { nayeon: 'rabbit', gabin: 'squirrel' };
+function charById(id) { return CHARS.find(c => c.id === String(id || '')) || null; }
 const CHAT_PEOPLE = [
   { name: '엄마',  emoji: '👩' },
   { name: '아빠',  emoji: '👨' },
@@ -1702,6 +1755,13 @@ function normalize() {
     ? String(savedPins[child]).trim()
     : CHILD_PIN_DEFAULT[child];
   data.settings.childPins = { nayeon: pinOf('nayeon'), gabin: pinOf('gabin') };
+  /* 🐾 파트너 캐릭터 — 모든 기기가 같이 봐요. 모르는 이름은 기본 친구로 되돌립니다 */
+  const savedChars = (data.settings.activeChar && typeof data.settings.activeChar === 'object') ? data.settings.activeChar : {};
+  const charOf = (child) => {
+    const id = String(savedChars[child] == null ? '' : savedChars[child]);
+    return charById(id) ? id : CHAR_STARTER[child];
+  };
+  data.settings.activeChar = { nayeon: charOf('nayeon'), gabin: charOf('gabin') };
   data.chat = Array.isArray(data.chat) ? data.chat
     .filter(m => m && m.id && typeof m.text === 'string' && m.text.trim())
     .map(m => ({
@@ -1839,6 +1899,18 @@ function normalize() {
     if (data.customBonuses[c] !== undefined && !Array.isArray(data.customBonuses[c])) delete data.customBonuses[c];
     if (data.allClear[c] && typeof data.allClear[c] !== 'object') data.allClear[c] = {};
   });
+  /* ⭐ 레벨 기억: 레벨 기준을 바꾸기 전에 이미 오른 레벨은 그대로 지켜 줍니다 (처음 한 번만 기록) */
+  const hadFloor = data.settings.levelFloor && typeof data.settings.levelFloor === 'object';
+  const oldFloor = hadFloor ? data.settings.levelFloor : {};
+  const floorOf = (child) => {
+    if (hadFloor) {
+      const f = Math.floor(Number(oldFloor[child]));
+      if (Number.isFinite(f) && f >= 1) return Math.min(f, 999);
+    }
+    /* 처음 한 번: 예전(100P 기준) 레벨을 그대로 기억해 두기 */
+    return Math.min(999, Math.floor(Math.max(0, totalEarned(child)) / 100) + 1);
+  };
+  data.settings.levelFloor = { nayeon: floorOf('nayeon'), gabin: floorOf('gabin') };
 }
 function recFor(date, child) {
   if (!data.daily[date]) data.daily[date] = {};
@@ -1891,10 +1963,33 @@ function giftTotal(child) {
 function balance(child) {
   return Math.max(0, totalEarned(child) - totalSpent(child) + giftTotal(child));
 }
+/* ⭐ 레벨: 레벨이 올라갈수록 다음 레벨에 필요한 포인트가 늘어나요
+   Lv.1→2 200P · Lv.2→3 300P · Lv.3→4 400P · Lv.4→5 500P … (한 단계마다 100P씩 더 필요) */
+function stepCost(lv) {
+  const n = Math.max(1, Math.floor(Number(lv) || 1));
+  return 200 + (n - 1) * 100;
+}
+/* 지금까지 올라간 가장 높은 레벨 (레벨 기준이 바뀌어도 레벨이 내려가지 않게 기억해 둡니다) */
+function levelFloor(child) {
+  const m = data.settings && data.settings.levelFloor;
+  const f = m && typeof m === 'object' ? Number(m[child]) : 0;
+  return Number.isFinite(f) && f >= 1 ? Math.min(Math.floor(f), 999) : 1;
+}
 function levelInfo(child) {
   const total = Math.max(0, totalEarned(child));   /* 벌점으로 마이너스가 되어도 레벨은 1 이상 */
-  const lv = Math.floor(total / 100) + 1;
-  return { lv: lv, xp: total % 100, total: total, next: lv * 100 };
+  let lv = 1;
+  let need = 0;
+  let span = stepCost(1);
+  while (lv < 999 && total >= need + span) { need += span; lv++; span = stepCost(lv); }
+  const floor = levelFloor(child);
+  if (floor > lv) {
+    lv = floor;
+    span = stepCost(lv);
+    need = 0;
+    for (let i = 1; i < lv; i++) need += stepCost(i);
+  }
+  const xp = Math.min(span, Math.max(0, total - need));
+  return { lv: lv, xp: xp, span: span, remaining: Math.max(0, span - xp), total: total, next: need + span };
 }
 function allClearCount(child) {
   const m = data.allClear[child];
@@ -1910,6 +2005,40 @@ function dexItems(child) {
 }
 function dexCount(child) {
   return dexItems(child).filter(d => d.unlocked).length;
+}
+
+/* ---------------- 🐾 파트너 캐릭터 ---------------- */
+function dexComplete(child) { return dexCount(child) >= DEX.length; }
+function charUnlocked(child, id) {
+  const c = charById(id);
+  if (!c) return false;
+  return !!c.starter || dexComplete(child);
+}
+function activeCharId(child) {
+  const m = data.settings && data.settings.activeChar;
+  const saved = m && typeof m === 'object' ? String(m[child] || '') : '';
+  const id = charById(saved) ? saved : CHAR_STARTER[child];
+  return charUnlocked(child, id) ? id : CHAR_STARTER[child];
+}
+function activeChar(child) {
+  return charById(activeCharId(child)) || { id: 'rabbit', name: '토끼', emoji: '🐰', starter: true };
+}
+/* 아이가 직접 파트너를 바꿔요 (관리자 잠금 없이) */
+function setActiveChar(child, id) {
+  if (CHILDREN.indexOf(child) < 0) return false;
+  const c = charById(id);
+  if (!c) return false;
+  if (!charUnlocked(child, id)) {
+    toast('🔒 ' + c.emoji + ' ' + c.name + '는 도감 12/12 모두 오픈하면 열려요!', 'warn');
+    return false;
+  }
+  if (!data.settings.activeChar || typeof data.settings.activeChar !== 'object') data.settings.activeChar = {};
+  data.settings.activeChar[child] = c.id;
+  renderChild(child);
+  save();
+  toast('🐾 ' + CHILD[child].name + '의 파트너는 ' + c.emoji + ' ' + c.name + '!', 'good');
+  openDex(child);
+  return true;
 }
 
 /* ============================================================
@@ -1974,8 +2103,20 @@ function renderChild(child) {
 
   const lv = levelInfo(child);
   card.querySelector('.lv').textContent = 'Lv.' + lv.lv;
-  card.querySelector('.xp-bar i').style.width = Math.min(100, lv.xp) + '%';
-  card.querySelector('.xp-txt').textContent = lv.xp + ' / 100  ·  다음 Lv.' + (lv.lv + 1) + '까지 ' + (100 - lv.xp) + 'P';
+  card.querySelector('.xp-bar i').style.width = Math.min(100, lv.span > 0 ? (lv.xp / lv.span) * 100 : 0) + '%';
+  card.querySelector('.xp-txt').textContent = lv.xp + ' / ' + lv.span + '  ·  다음 Lv.' + (lv.lv + 1) + '까지 ' + lv.remaining + 'P';
+  /* 🐾 내 파트너 캐릭터 */
+  const mate = activeChar(child);
+  const chip = card.querySelector('.partner-chip');
+  if (chip) {
+    chip.innerHTML = '🐾 파트너 <b>' + mate.emoji + ' ' + mate.name + '</b>';
+    chip.setAttribute('aria-label', CHILD[child].name + ' 파트너 캐릭터 바꾸기 (지금 ' + mate.name + ')');
+  }
+  /* 올라간 레벨은 기억해 두어서, 레벨 기준이 바뀌어도 레벨이 내려가지 않게 */
+  if (lv.lv > levelFloor(child) && data.settings && data.settings.levelFloor) {
+    data.settings.levelFloor[child] = lv.lv;
+    save();
+  }
   card.querySelector('.balance').textContent = fmt(balance(child)) + 'P';
   card.querySelector('.total').textContent = fmt(lv.total) + 'P';
 
@@ -2827,11 +2968,37 @@ function requireAdmin() {
   return false;
 }
 
+/* 🐾 보유 캐릭터 칸 (도감 안에 들어가요) */
+function charSection(child) {
+  const cur = activeCharId(child);
+  const done = dexComplete(child);
+  const cells = CHARS.map(c => {
+    const on = charUnlocked(child, c.id);
+    const sel = on && c.id === cur;
+    const sub = sel ? '⭐ 파트너' : (on ? '눌러서 선택' : '도감 12/12');
+    return '<button type="button" class="char-item ' + (on ? 'on' : 'off') + (sel ? ' sel' : '') + '"' +
+      ' data-pickchar="' + c.id + '" data-char-child="' + child + '"' +
+      (on ? '' : ' disabled aria-disabled="true"') +
+      ' aria-pressed="' + (sel ? 'true' : 'false') + '" aria-label="' + c.name + (on ? (sel ? ' 선택됨' : ' 선택하기') : ' 잠김') + '">' +
+      (on ? '' : '<span class="lock">🔒</span>') +
+      '<span class="ce">' + c.emoji + '</span>' +
+      '<span class="cn">' + c.name + '</span>' +
+      '<span class="cs">' + sub + '</span>' +
+    '</button>';
+  }).join('');
+  return '<div class="dex-sec">🐾 보유 캐릭터 (내 파트너)</div>' +
+    '<div class="char-grid">' + cells + '</div>' +
+    (done
+      ? '<div class="char-hint">🐾 마음에 드는 친구를 누르면 바로 파트너가 돼요!</div>'
+      : '<div class="char-hint">🔒 잠긴 친구는 <b>도감 12/12 모두 오픈 시 해금!</b></div>');
+}
+
 function openDex(child) {
   const items = dexItems(child);
   const lv = levelInfo(child);
   const ac = allClearCount(child);
   const unlocked = items.filter(d => d.unlocked).length;
+  const done = unlocked >= DEX.length;
   const grid = (list) => '<div class="dex-grid">' + list.map(d =>
     '<div class="dex-item ' + (d.unlocked ? 'on' : 'off') + '">' +
       (d.unlocked ? '' : '<span class="lock">🔒</span>') +
@@ -2841,8 +3008,10 @@ function openDex(child) {
     '</div>').join('') + '</div>';
   openModal(
     '📖 ' + CHILD[child].emoji + ' ' + CHILD[child].name + '의 도감',
-    '레벨을 올리거나 하루 퀘스트를 모두 끝내면 새로운 친구가 찾아와요',
+    done ? '도감을 모두 모았어요! 이제 새 친구들과 놀 수 있어요 🎉' : '레벨을 올리거나 하루 퀘스트를 모두 끝내면 새로운 친구가 찾아와요',
+    (done ? '<div class="dex-done">🎉 도감 완성! 새 캐릭터가 열렸어요!</div>' : '') +
     '<div class="dex-progress"><span>' + unlocked + ' / ' + DEX.length + ' 친구</span><span class="bar"><i style="width:' + Math.round(unlocked / DEX.length * 100) + '%"></i></span></div>' +
+    charSection(child) +
     '<div class="dex-sec">🌱 레벨 친구 (지금 Lv.' + lv.lv + ')</div>' +
     grid(items.filter(d => d.kind === 'level')) +
     '<div class="dex-sec">🍀 올클리어 알 (지금 ' + ac + '일)</div>' +
@@ -3765,7 +3934,8 @@ function markAllClear(child) {
   data.allClear[child][todayKey()] = true;
   renderChild(child);
   const after = dexCount(child);
-  if (after > before) toast('🎉 올클리어! 도감 친구가 새로 왔어요 🍀', 'good');
+  if (after >= DEX.length && before < DEX.length) toast('🎉 도감 완성! 새 캐릭터가 열렸어요! 🐢 🐶', 'good');
+  else if (after > before) toast('🎉 올클리어! 도감 친구가 새로 왔어요 🍀', 'good');
   else toast('🎉 ' + CHILD[child].name + ' 오늘 퀘스트 올클리어!', 'good');
 }
 
@@ -3848,6 +4018,7 @@ async function delItem(child, kind, qid) {
 }
 
 function toggleTask(child, kind, qid, on) {
+  const dexBefore = dexCount(child);
   const list = kind === 'tasks' ? taskList(child) : bonusList(child);
   const q = list.find(x => x.id === qid);
   const rec = recFor(todayKey(), child);
@@ -3861,6 +4032,10 @@ function toggleTask(child, kind, qid, on) {
   save();
   if (on && q) {
     toast((kind === 'tasks' ? '⭐ ' : '🎁 ') + name + ' 완료! +' + points + 'P', 'good');
+  }
+  /* 레벨이 올라 도감을 모두 모은 순간에는 새 캐릭터 소식을 한 번 더 알려 줘요 */
+  if (dexBefore < DEX.length && dexCount(child) >= DEX.length) {
+    setTimeout(() => toast('🎉 도감 완성! 새 캐릭터가 열렸어요! 🐢 🐶', 'good'), 900);
   }
   if (on && kind === 'tasks') markAllClear(child);
 }
@@ -4667,6 +4842,8 @@ document.addEventListener('click', async e => {
   if (t.dataset.delBonus) { delItem(t.dataset.child, 'bonuses', t.dataset.delBonus); return; }
   if (t.dataset.reset) { resetDay(t.dataset.reset); return; }
   if (t.dataset.dex) { openDex(t.dataset.dex); return; }
+  if (t.dataset.chardex) { openDex(t.dataset.chardex); return; }
+  if (t.dataset.pickchar) { setActiveChar(t.dataset.charChild, t.dataset.pickchar); return; }
   if (t.dataset.reward) { redeemReward(t.dataset.child, t.dataset.reward); return; }
   if (t.dataset.undoRedeem) { undoRedeem(t.dataset.undoRedeem); return; }
   if (t.dataset.wishDel) { delWish(t.dataset.wishDel); return; }
