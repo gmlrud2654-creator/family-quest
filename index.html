@@ -1999,7 +1999,7 @@ function renderWishlist() {
           ((badge || acts) ? '<div class="wish-foot">' + badge + acts + '</div>' : '') +
         '</div>';
       }).join('')
-    : '<p class="empty">갖고 싶은 걸 적어 보세요 💕</p>';
+    : '<p class="empty">' + (data.wishlist.length ? '사준 건 📋 목록보기에서 볼 수 있어요 🎉' : '갖고 싶은 걸 적어 보세요 💕') + '</p>';
 }
 
 /* ---------- 📋 사주세요 목록보기 (사준 것까지 모아 보기) ---------- */
@@ -3970,6 +3970,15 @@ async function delWish(id) {
 }
 
 /* 📋 목록보기 모달에서 지우기 (모달은 하나만: 확인창을 위해 잠시 닫았다가 다시 열어요) */
+function applyWishDelete(id) {
+  const w = wishById(id);
+  if (!w) return '';
+  data.wishlist = data.wishlist.filter(x => String(x.id) !== String(id));
+  renderWishlist();
+  save();
+  openWishHistory();
+  return w.name;
+}
 async function deleteWishFromHistory(id) {
   const w = wishById(id);
   if (!w) return;
@@ -3978,10 +3987,7 @@ async function deleteWishFromHistory(id) {
   closeModal();
   const ok = await askConfirm("'" + w.name + "'을(를) 목록에서 지울까요?", '지우기', true);
   if (!ok) { openWishHistory(); return; }
-  data.wishlist = data.wishlist.filter(x => String(x.id) !== String(id));
-  renderWishlist();
-  save();
-  openWishHistory();
+  applyWishDelete(id);
   toast('목록에서 지웠어요', 'good');
 }
 
