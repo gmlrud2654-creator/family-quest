@@ -1517,7 +1517,7 @@ body.admin-locked .ledger-askbar{display:none!important}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKVtLwxYHibYHI171cHWNoJ5cNmKOz0qQ",
@@ -1725,6 +1725,9 @@ let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
 let seededTaskAdded = false;   /* 이번 불러오기에서 '1% 연산'을 넣었는지 — 바로 저장해서 다른 기기에도 남깁니다 */
 let serverLoaded = false;      /* 🛡️ Firestore 서버에서 진짜 문서를 한 번이라도 받았는지 — 받기 전에는 저장 금지 */
 let serverHadData = false;     /* 🛡️ 서버에서 '내용 있는 가족 기록'을 받은 적이 있는지 — 빈 화면 덮어쓰기 차단용 */
+let serverBase = null;           /* 🛡️ 이 화면이 마지막으로 서버에서 받은 기준본 — 내가 바꾼 것만 가려내는 기준 */
+let loadedRev = 0;             /* 🛡️ 그 기준본의 서버 버전 번호(rev) */
+let pendingLocalSave = false;  /* 🛡️ 연결이 끊겨 아직 못 보낸 저장이 있는지 */
 let lastBackupSig = '';        /* 같은 내용을 백업에 두 번 쌓지 않으려고 */
 let allEventsReturn = false;   /* 전체 일정 모달에서 수정·삭제했을 때 다시 그 모달로 돌아가기 */
 
@@ -2256,7 +2259,7 @@ function restoreBackupData(idx) {
   renderAll();
   tick();
   scheduleReminders();
-  const wrote = save({ allowEmpty: true });
+  const wrote = save({ allowEmpty: true, forceReplace: true });
   return { ok: !!wrote, reason: wrote ? '' : (lastBlockedSave || 'blocked'), ts: b.ts };
 }
 async function askRestoreBackup(idx) {
@@ -2272,13 +2275,149 @@ async function askRestoreBackup(idx) {
   else toast('되돌리지 못했어요 (' + res.reason + ')', 'err');
 }
 
+/* ============================================================
+   🛡️ 저장 병합 (3-way merge)
+   예전 화면을 들고 있던 기기가 최신 가족 기록을 덮어쓰지 못하게 합니다.
+   - base  : 이 화면이 마지막으로 서버에서 받은 그대로의 기록
+   - mine  : 지금 이 화면에서 저장하려는 기록
+   - server: 저장하는 순간의 진짜 서버 기록
+   내가 바꾼 부분만 서버에 얹고, 내가 건드리지 않은 다른 기기의 기록은 그대로 둡니다.
+   내가 '지운' 항목(base에는 있었는데 mine에 없음)만 서버에서도 지웁니다.
+   ============================================================ */
+function cloneJSON(v) {
+  if (v === undefined) return undefined;
+  try { return JSON.parse(JSON.stringify(v)); } catch (e) { return undefined; }
+}
+function isPlainObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+function deepSame(a, b) {
+  if (a === b) return true;
+  if (a === undefined || b === undefined || a === null || b === null) return false;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  const aArr = Array.isArray(a), bArr = Array.isArray(b);
+  if (aArr !== bArr) return false;
+  if (aArr) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!deepSame(a[i], b[i])) return false;
+    return true;
+  }
+  const ak = Object.keys(a), bk = Object.keys(b);
+  if (ak.length !== bk.length) return false;
+  for (let i = 0; i < ak.length; i++) {
+    const k = ak[i];
+    if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+    if (!deepSame(a[k], b[k])) return false;
+  }
+  return true;
+}
+function entryKey(x) {
+  if (isPlainObj(x) && x.id !== undefined && x.id !== null) return 'id:' + String(x.id);
+  return 'v:' + JSON.stringify(x === undefined ? null : x);
+}
+function mergeList3(base, mine, server) {
+  const bMap = new Map(), mMap = new Map(), sMap = new Map();
+  (Array.isArray(base) ? base : []).forEach(x => { const k = entryKey(x); if (!bMap.has(k)) bMap.set(k, x); });
+  mine.forEach(x => { const k = entryKey(x); if (!mMap.has(k)) mMap.set(k, x); });
+  server.forEach(x => { const k = entryKey(x); if (!sMap.has(k)) sMap.set(k, x); });
+  const out = [];
+  const used = new Set();
+  /* ① 서버 순서대로 — 다른 기기가 넣은 항목은 그대로 살립니다 */
+  server.forEach(item => {
+    const k = entryKey(item);
+    if (used.has(k)) return;
+    used.add(k);
+    if (mMap.has(k)) {
+      const v = merge3(bMap.get(k), mMap.get(k), item);
+      if (v !== undefined) out.push(v);
+      return;
+    }
+    if (bMap.has(k)) return;      /* 내가 갖고 있다가 지운 항목 → 삭제 의도를 따릅니다 */
+    out.push(cloneJSON(item));    /* 기준본에 없던 항목 = 다른 기기가 새로 넣음 → 보존 */
+  });
+  /* ② 이 화면에서 새로 만들었거나 고친 항목 */
+  mine.forEach(item => {
+    const k = entryKey(item);
+    if (used.has(k)) return;
+    used.add(k);
+    if (sMap.has(k)) return;
+    if (bMap.has(k)) {
+      /* 내가 갖고 있던 항목이 서버에서 사라졌다: 내가 고친 것이면 되살리고, 그대로면 남의 삭제를 따릅니다 */
+      if (!deepSame(bMap.get(k), item)) out.push(merge3(bMap.get(k), item, undefined));
+      return;
+    }
+    out.push(cloneJSON(item));
+  });
+  return out;
+}
+function merge3(base, mine, server) {
+  if (deepSame(base, mine)) return cloneJSON(server);      /* 이 화면은 안 바꿈 → 서버 최신을 그대로 */
+  if (deepSame(base, server)) return cloneJSON(mine);      /* 서버가 그대로 → 내 변경을 그대로 */
+  if (Array.isArray(mine) && Array.isArray(server)) return mergeList3(base, mine, server);
+  if (isPlainObj(mine) && isPlainObj(server)) {
+    const out = {};
+    const keys = [];
+    const seen = {};
+    [base, mine, server].forEach(o => {
+      if (!isPlainObj(o)) return;
+      Object.keys(o).forEach(k => { if (!seen[k]) { seen[k] = 1; keys.push(k); } });
+    });
+    keys.forEach(k => {
+      const v = merge3(isPlainObj(base) ? base[k] : undefined, mine[k], server[k]);
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+  /* 값이 서로 다르게 바뀐 경우: 이 화면에서 방금 바꾼 값을 씁니다 */
+  if (mine === undefined) return undefined;
+  return cloneJSON(mine);
+}
+/* 서버가 관리하는 값(rev·updatedAt)은 기록 비교에서 빼 둡니다 */
+function stripMeta(d) {
+  const c = cloneJSON(d);
+  if (!isPlainObj(c)) return {};
+  delete c.rev;
+  delete c.updatedAt;
+  return c;
+}
+/* 어떤 기록이 정리(normalize)된 뒤 어떻게 되는지 사본으로 계산합니다 */
+function normalizedCopy(d) {
+  const keepData = data;
+  const keepSeeded = seededTaskAdded;
+  data = cloneJSON(d) || {};
+  normalize();
+  const out = stripMeta(data);
+  data = keepData;
+  seededTaskAdded = keepSeeded;
+  return out;
+}
+/* ⭐ 레벨은 어느 기기에서도 내려가지 않게: 아이별로 기억해 둔 가장 높은 레벨을 유지 */
+function keepHighestLevel(merged, parts) {
+  if (!isPlainObj(merged)) return merged;
+  if (!isPlainObj(merged.settings)) merged.settings = {};
+  const floor = isPlainObj(merged.settings.levelFloor) ? merged.settings.levelFloor : {};
+  CHILDREN.forEach(c => {
+    let top = 1;
+    parts.forEach(p => {
+      const f = p && isPlainObj(p.settings) && isPlainObj(p.settings.levelFloor) ? p.settings.levelFloor : null;
+      const n = f ? Math.floor(Number(f[c])) : NaN;
+      if (Number.isFinite(n) && n > top) top = n;
+    });
+    const mineFloor = Math.floor(Number(floor[c]));
+    const keep = Math.max(top, Number.isFinite(mineFloor) && mineFloor >= 1 ? mineFloor : 1);
+    floor[c] = Math.min(999, keep);
+  });
+  merged.settings.levelFloor = floor;
+  return merged;
+}
+
 let saveQueue = Promise.resolve();
 let lastBlockedSave = '';   /* 마지막으로 막힌 저장 이유 ('loading' | 'blank' | '') */
+function dashboardRef() { return doc(db, 'families', uid, 'shared', 'dashboard'); }
+
 function save(opts) {
   const allowEmpty = !!(opts && opts.allowEmpty);
+  const forceReplace = !!(opts && opts.forceReplace);
   if (!uid) return false;
-  const snapshot = JSON.parse(JSON.stringify(data));
-  delete snapshot.updatedAt;
+  const snapshot = stripMeta(data);
   /* 🛡️ ① 서버 확인 전에는 저장하지 않아요 — 빈 data 로 처음부터 덮어쓰는 사고를 막습니다 */
   if (!serverLoaded) {
     lastBlockedSave = 'loading';
@@ -2296,19 +2435,64 @@ function save(opts) {
   if (!dataIsBlank(snapshot)) serverHadData = true;
   writing++;
   setStatus('저장 중…', 'busy');
-  saveQueue = saveQueue.then(() => setDoc(
-    doc(db, 'families', uid, 'shared', 'dashboard'),
-    Object.assign(snapshot, { updatedAt: serverTimestamp() }),
-    { merge: true }
-  )).then(() => {
+  const ref = dashboardRef();
+  saveQueue = saveQueue.then(() => runTransaction(db, tx => tx.get(ref).then(snap => {
+    const exists = !!(snap && typeof snap.exists === 'function' && snap.exists());
+    const serverRaw = exists ? cloneJSON(snap.data() || {}) || {} : {};
+    const server = stripMeta(serverRaw);
+    let merged;
+    if (forceReplace || !exists) {
+      /* 💾 백업 복원처럼 '이 시점으로 되돌리기'를 일부러 할 때,
+         또는 서버에 아직 문서가 없어 덮어쓸 기록이 없을 때만 통째로 씁니다 */
+      merged = cloneJSON(snapshot) || {};
+    } else {
+      merged = merge3(serverBase || {}, snapshot, server) || {};
+      merged = keepHighestLevel(merged, [serverBase || {}, snapshot, server]);
+    }
+    const serverRev = Math.floor(Number(serverRaw.rev));
+    const nextRev = (Number.isFinite(serverRev) && serverRev > 0 ? serverRev : 0) + 1;
+    merged.rev = nextRev;
+    merged.updatedAt = serverTimestamp();
+    tx.set(ref, merged);
+    return { merged: stripMeta(merged), rev: nextRev, server: server, existed: exists };
+  }))).then(res => {
     writing = Math.max(0, writing - 1);
+    pendingLocalSave = false;
+    loadedRev = res.rev;
+    serverHadData = true;
+    const now = stripMeta(data);
+    /* 다른 기기가 그 사이에 넣은 기록까지 화면에 받아들이고,
+       아직 저장 못한 이 화면의 변경은 그 위에 다시 얹어 잃지 않게 합니다 */
+    data = deepSame(snapshot, now)
+      ? normalizedCopy(res.merged)
+      : (normalizedCopy(merge3(snapshot, now, res.merged) || res.merged));
+    serverBase = stripMeta(normalizedCopy(res.merged));
+    renderAll();
+    tick();
+    scheduleReminders();
     setStatus('모든 기기와 동기화됨', 'ok');
   }).catch(err => {
     writing = Math.max(0, writing - 1);
-    setStatus('저장 오류: ' + err.message, 'err');
-    console.error(err);
+    /* 연결이 끊겼을 때: 화면 기록은 그대로 두고, 연결되면 서버 최신 기록에 합쳐서 다시 보냅니다 */
+    const code = String((err && (err.code || err.name)) || '');
+    const offline = code === 'unavailable' || code === 'deadline-exceeded' || code === 'aborted' ||
+      /offline|network|unavailable/i.test(String(err && err.message));
+    pendingLocalSave = true;
+    if (offline) {
+      setStatus('연결되면 합쳐서 저장할게요', 'busy');
+      setTimeout(() => { if (pendingLocalSave) { pendingLocalSave = false; save(); } }, 5000);
+    } else {
+      setStatus('저장 오류: ' + (err && err.message ? err.message : ''), 'err');
+    }
+    console.error('[family-quest] 저장 실패 — 기록은 화면에 그대로 두고 다시 시도합니다', err);
   });
   return true;
+}
+/* 인터넷이 다시 붙으면, 합쳐서 저장하지 못한 기록을 서버 최신 기록에 합쳐 다시 보냅니다 */
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('online', () => {
+    if (pendingLocalSave) { pendingLocalSave = false; save(); }
+  });
 }
 
 /* ============================================================
@@ -5103,14 +5287,20 @@ onAuthStateChanged(auth, user => {
     /* 🛡️ 로그아웃하면 서버 확인 상태를 처음으로 되돌려요 */
     serverLoaded = false;
     serverHadData = false;
+    serverBase = null;
+    loadedRev = 0;
+    pendingLocalSave = false;
     lastBackupSig = '';
     return;
   }
   setStatus('연결 확인 중', 'busy');
   serverLoaded = false;
   serverHadData = false;
+  serverBase = null;
+  loadedRev = 0;
+  pendingLocalSave = false;
   lastBackupSig = '';
-  unsub = onSnapshot(doc(db, 'families', uid, 'shared', 'dashboard'), snap => {
+  unsub = onSnapshot(dashboardRef(), snap => {
     const fromCache = !!(snap.metadata && snap.metadata.fromCache);
     const exists = !!(snap.exists && snap.exists());
     /* 🛡️ 오프라인·캐시 미스로 온 '빈 스냅샷'은 화면도 저장도 건드리지 않아요.
@@ -5121,8 +5311,18 @@ onAuthStateChanged(auth, user => {
     }
     /* 서버가 확인해 준 스냅샷(비캐시)이거나, 실제로 문서가 있을 때만 '서버 확인됨' */
     if (exists || !fromCache) serverLoaded = true;
-    data = fresh();
-    if (exists) data = snap.data() || {};
+    const serverRaw = exists ? cloneJSON(snap.data() || {}) || {} : {};
+    const incomingRev = Math.floor(Number(serverRaw.rev));
+    const incoming = stripMeta(serverRaw);
+    /* 🛡️ 기준본(serverBase)과 비교해 '아직 서버로 못 보낸 이 화면의 변경'이 있으면
+       새로 받은 서버 기록 위에 다시 얹어 잃지 않게 합니다. 그 밖에는 서버 기록을 그대로 보여 줍니다. */
+    if (serverBase && !deepSame(stripMeta(data), serverBase)) {
+      data = normalizedCopy(merge3(serverBase, stripMeta(data), incoming) || incoming);
+    } else {
+      data = normalizedCopy(incoming);
+    }
+    serverBase = normalizedCopy(incoming);
+    loadedRev = Number.isFinite(incomingRev) && incomingRev > 0 ? incomingRev : 0;
     normalize();
     renderAll();
     tick();
