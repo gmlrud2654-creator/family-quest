@@ -1725,7 +1725,7 @@ let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
 let seededTaskAdded = false;   /* 이번 불러오기에서 '1% 연산'을 넣었는지 — 바로 저장해서 다른 기기에도 남깁니다 */
 let serverLoaded = false;      /* 🛡️ Firestore 서버에서 진짜 문서를 한 번이라도 받았는지 — 받기 전에는 저장 금지 */
 let serverHadData = false;     /* 🛡️ 서버에서 '내용 있는 가족 기록'을 받은 적이 있는지 — 빈 화면 덮어쓰기 차단용 */
-let serverBase = null;           /* 🛡️ 이 화면이 마지막으로 서버에서 받은 기준본 — 내가 바꾼 것만 가려내는 기준 */
+let serverBase = null;         /* 🛡️ 이 화면이 마지막으로 서버에서 받은 기준본 — 내가 바꾼 것만 가려내는 기준 */
 let loadedRev = 0;             /* 🛡️ 그 기준본의 서버 버전 번호(rev) */
 let pendingLocalSave = false;  /* 🛡️ 연결이 끊겨 아직 못 보낸 저장이 있는지 */
 let lastBackupSig = '';        /* 같은 내용을 백업에 두 번 쌓지 않으려고 */
@@ -2310,7 +2310,11 @@ function deepSame(a, b) {
   return true;
 }
 function entryKey(x) {
-  if (isPlainObj(x) && x.id !== undefined && x.id !== null) return 'id:' + String(x.id);
+  if (isPlainObj(x)) {
+    if (x.id !== undefined && x.id !== null) return 'id:' + String(x.id);
+    /* id 가 없는 항목(일정 준비물 같은 것)은 글자로 같은 항목을 가려냅니다 */
+    if (typeof x.text === 'string' && x.text) return 'text:' + x.text;
+  }
   return 'v:' + JSON.stringify(x === undefined ? null : x);
 }
 function mergeList3(base, mine, server) {
