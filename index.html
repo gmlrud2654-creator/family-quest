@@ -865,6 +865,11 @@ body.admin-locked .notice-empty{display:none!important}
 
 /* ---------------- 엄마·아빠 보너스 포인트 ---------------- */
 .manual-card{background:linear-gradient(180deg,#fffaf3,rgba(255,253,248,.95))}
+.backup-card{background:linear-gradient(180deg,#f7f4ff,rgba(255,253,248,.95))}
+.backup-hint{font-size:11.5px; color:var(--muted); margin:0 0 8px; line-height:1.5}
+.backup-row .h-main b{font-size:11.5px}
+.backup-row .b-sub{display:block; font-size:10.5px; color:#b0a695; font-weight:700; margin-top:2px; white-space:normal}
+.backup-row .mini{flex:0 0 auto; padding:5px 9px; font-size:11px}
 .manual-form{display:flex; flex-direction:column; gap:5px; margin-bottom:9px}
 .manual-form .manual-row{display:flex; gap:5px; min-width:0}
 .manual-form .manual-row>*{min-width:0}
@@ -1455,6 +1460,15 @@ body.admin-locked .ledger-askbar{display:none!important}
         </div>
         <div class="manual-list" id="manualList"></div>
       </div>
+
+      <div class="card backup-card hidden" id="backupCard">
+        <div class="sec-head">
+          <h2>💾 백업 복원</h2>
+          <span class="count" id="backupCount">0개</span>
+        </div>
+        <p class="backup-hint">이 기기에 자동으로 저장된 최근 기록이에요. 화면이 갑자기 비어 버렸을 때 이전 기록으로 되살릴 수 있어요.</p>
+        <div class="history" id="backupList"></div>
+      </div>
     </section>
   </div>
 
@@ -1709,6 +1723,9 @@ let writing = 0;
 let idleTimer = null;
 let isAdminUnlocked = false;   /* 세션 상태: 새로 열면 항상 잠김 */
 let seededTaskAdded = false;   /* 이번 불러오기에서 '1% 연산'을 넣었는지 — 바로 저장해서 다른 기기에도 남깁니다 */
+let serverLoaded = false;      /* 🛡️ Firestore 서버에서 진짜 문서를 한 번이라도 받았는지 — 받기 전에는 저장 금지 */
+let serverHadData = false;     /* 🛡️ 서버에서 '내용 있는 가족 기록'을 받은 적이 있는지 — 빈 화면 덮어쓰기 차단용 */
+let lastBackupSig = '';        /* 같은 내용을 백업에 두 번 쌓지 않으려고 */
 let allEventsReturn = false;   /* 전체 일정 모달에서 수정·삭제했을 때 다시 그 모달로 돌아가기 */
 
 /* 가족 채팅방 상태 (선택한 이름과 마지막으로 본 시각은 이 기기에만 저장) */
@@ -2106,11 +2123,177 @@ function setStatus(msg, kind) {
   el.textContent = msg;
   el.className = 'status' + (kind ? ' ' + kind : '');
 }
+/* ---------------- 🛡️ 저장 안전장치 (가족 기록 덮어쓰기 차단) ---------------- */
+/* 가족 기록이 들어 있던 곳에 '빈 화면'을 그대로 저장해 통째로 지우는 사고를 막습니다.
+   ① 서버에서 진짜 문서를 받기 전에는 저장하지 않아요 (serverLoaded)
+   ② 서버에 내용이 있던 적이 있으면, 완전히 빈 데이터는 저장하지 않아요 (serverHadData) */
+function dataIsBlank(d) {
+  if (!d || typeof d !== 'object') return true;
+  const hasArr = (k) => Array.isArray(d[k]) && d[k].length > 0;
+  const hasObj = (k) => !!d[k] && typeof d[k] === 'object' && Object.keys(d[k]).length > 0;
+  if (hasArr('events') || hasArr('manualPoints') || hasArr('chat') || hasArr('redemptions') ||
+      hasArr('pointGifts') || hasArr('wishlist') || hasArr('studyLogs') || hasArr('noticeHistory')) return false;
+  if (hasObj('allClear')) return false;
+  /* 보상 상점 목록은 기본값이 늘 채워져 있어요 — 부모가 직접 고쳤을 때만 내용으로 칩니다 */
+  if (Array.isArray(d.customRewards)) {
+    const myRewards = JSON.stringify(d.customRewards.map(r => (r && r.name) + ':' + (r && r.cost)));
+    const defaultRewards = JSON.stringify(REWARDS.map(r => r.name + ':' + r.cost));
+    if (myRewards !== defaultRewards) return false;
+  }
+  if (d.notice && d.notice.text) return false;
+  /* 퀘스트 목록·체크 기록은 날짜별로 담겨 있어요 — 빈 껍데기(오늘 날짜만 생긴 것)는 내용으로 치지 않습니다 */
+  if (d.customTasks && typeof d.customTasks === 'object') {
+    for (const c in d.customTasks) if (Array.isArray(d.customTasks[c]) && d.customTasks[c].length > 0) return false;
+  }
+  if (d.customBonuses && typeof d.customBonuses === 'object') {
+    for (const c in d.customBonuses) if (Array.isArray(d.customBonuses[c]) && d.customBonuses[c].length > 0) return false;
+  }
+  if (d.daily && typeof d.daily === 'object') {
+    for (const date in d.daily) {
+      const day = d.daily[date];
+      if (!day || typeof day !== 'object') continue;
+      for (const child in day) {
+        const rec = day[child];
+        if (!rec || typeof rec !== 'object') continue;
+        if ((Array.isArray(rec.tasks) && rec.tasks.length > 0) ||
+            (Array.isArray(rec.bonuses) && rec.bonuses.length > 0) ||
+            (Array.isArray(rec.selfMemos) && rec.selfMemos.length > 0) ||
+            (Array.isArray(rec.study) && rec.study.length > 0)) return false;
+      }
+    }
+  }
+  return true;
+}
+
+/* ---------------- 💾 기기별 자동 백업 (localStorage) ---------------- */
+const BACKUP_PREFIX = 'fq_auto_backups_';
+const BACKUP_MAX = 5;
+function backupStoreKey() { return BACKUP_PREFIX + (uid || 'guest'); }
+function dataSig(d) {
+  try {
+    const copy = JSON.parse(JSON.stringify(d || {}));
+    delete copy.updatedAt;
+    return JSON.stringify(copy);
+  } catch (e) { return 'x' + Date.now(); }
+}
+function readAutoBackups() {
+  try {
+    const raw = localStorage.getItem(backupStoreKey());
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter(b => b && b.ts && b.data && typeof b.data === 'object') : [];
+  } catch (e) { return []; }
+}
+function writeAutoBackups(list) {
+  const key = backupStoreKey();
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (e) {
+    /* 이 기기 저장 공간이 모자라면 오래된 것부터 버리고 한 번 더 시도해요 */
+    try { localStorage.setItem(key, JSON.stringify(list.slice(0, 2))); } catch (e2) { /* 그래도 안 되면 백업은 건너뜁니다 */ }
+  }
+}
+function autoBackup(obj, force) {
+  if (!uid || dataIsBlank(obj)) return false;
+  const sig = dataSig(obj);
+  if (!force && sig === lastBackupSig) return false;
+  const list = readAutoBackups();
+  list.unshift({ ts: Date.now(), sig: sig, data: JSON.parse(JSON.stringify(obj)) });
+  lastBackupSig = sig;
+  writeAutoBackups(list.slice(0, BACKUP_MAX));
+  if (isAdminUnlocked) renderBackupList();
+  return true;
+}
+function backupTimeText(ts) {
+  const d = new Date(Number(ts) || 0);
+  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WEEK[d.getDay()] + ') ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function backupSummary(b) {
+  const d = (b && b.data) || {};
+  const n = (k) => (Array.isArray(d[k]) ? d[k].length : 0);
+  const bits = [];
+  if (n('manualPoints')) bits.push('포인트 ' + n('manualPoints') + '건');
+  if (n('chat')) bits.push('채팅 ' + n('chat') + '개');
+  if (n('events')) bits.push('일정 ' + n('events') + '개');
+  if (n('redemptions')) bits.push('교환 ' + n('redemptions') + '건');
+  if (n('wishlist')) bits.push('사주세요 ' + n('wishlist') + '개');
+  let checks = 0;
+  if (d.daily && typeof d.daily === 'object') {
+    for (const date in d.daily) {
+      const day = d.daily[date] || {};
+      for (const c in day) {
+        const rec = day[c] || {};
+        checks += (Array.isArray(rec.tasks) ? rec.tasks.length : 0) + (Array.isArray(rec.bonuses) ? rec.bonuses.length : 0);
+      }
+    }
+  }
+  if (checks) bits.push('퀘스트 체크 ' + checks + '개');
+  return bits.length ? bits.join(' · ') : '기본 설정만 있던 때';
+}
+function renderBackupList() {
+  const card = $('backupCard');
+  if (!card) return;
+  card.classList.toggle('hidden', !isAdminUnlocked);
+  const list = readAutoBackups();
+  if ($('backupCount')) $('backupCount').textContent = list.length + '개';
+  const box = $('backupList');
+  if (!box) return;
+  box.innerHTML = list.length ? list.map((b, i) =>
+    '<div class="hist backup-row">' +
+      '<span class="h-main"><b>' + esc(backupTimeText(b.ts)) + '</b><span class="b-sub">' + esc(backupSummary(b)) + '</span></span>' +
+      '<button class="mini" data-backup-restore="' + i + '">복원</button>' +
+    '</div>'
+  ).join('') : '<p class="empty" style="padding:6px">아직 백업이 없어요. 가족 기록을 받아 오면 자동으로 쌓여요 💾</p>';
+}
+/* 백업 하나를 골라 되돌립니다 — 되돌리기 전 화면도 먼저 백업해 두어요 */
+function restoreBackupData(idx) {
+  const list = readAutoBackups();
+  const b = list[Number(idx)];
+  if (!b) return { ok: false, reason: 'missing' };
+  if (!serverLoaded) return { ok: false, reason: 'loading' };
+  autoBackup(data, true);
+  data = JSON.parse(JSON.stringify(b.data));
+  normalize();
+  renderAll();
+  tick();
+  scheduleReminders();
+  const wrote = save({ allowEmpty: true });
+  return { ok: !!wrote, reason: wrote ? '' : (lastBlockedSave || 'blocked'), ts: b.ts };
+}
+async function askRestoreBackup(idx) {
+  if (!isAdminUnlocked) { requireAdmin(); return; }
+  const list = readAutoBackups();
+  const b = list[Number(idx)];
+  if (!b) { toast('그 백업을 찾을 수 없어요', 'err'); renderBackupList(); return; }
+  const ok = await askConfirm('💾 ' + backupTimeText(b.ts) + ' 때 기록으로 되돌릴까요? 지금 화면은 그 전에 한 번 더 백업해 둘게요.', '되돌리기');
+  if (!ok) return;
+  const res = restoreBackupData(idx);
+  if (res.ok) toast('💾 ' + backupTimeText(res.ts) + ' 기록으로 되돌렸어요', 'good');
+  else if (res.reason === 'loading') toast('인터넷 연결을 먼저 확인해 주세요', 'err');
+  else toast('되돌리지 못했어요 (' + res.reason + ')', 'err');
+}
+
 let saveQueue = Promise.resolve();
-function save() {
-  if (!uid) return;
+let lastBlockedSave = '';   /* 마지막으로 막힌 저장 이유 ('loading' | 'blank' | '') */
+function save(opts) {
+  const allowEmpty = !!(opts && opts.allowEmpty);
+  if (!uid) return false;
   const snapshot = JSON.parse(JSON.stringify(data));
   delete snapshot.updatedAt;
+  /* 🛡️ ① 서버 확인 전에는 저장하지 않아요 — 빈 data 로 처음부터 덮어쓰는 사고를 막습니다 */
+  if (!serverLoaded) {
+    lastBlockedSave = 'loading';
+    setStatus('서버 확인 중… 저장 잠금', 'busy');
+    return false;
+  }
+  /* 🛡️ ② 서버에 가족 기록이 있던 적이 있으면 빈 화면은 저장하지 않아요 */
+  if (!allowEmpty && serverHadData && dataIsBlank(snapshot)) {
+    lastBlockedSave = 'blank';
+    setStatus('빈 화면 저장 차단 · 기록 보호 중', 'err');
+    console.warn('[family-quest] 빈 데이터 저장을 막았습니다');
+    return false;
+  }
+  lastBlockedSave = '';
+  if (!dataIsBlank(snapshot)) serverHadData = true;
   writing++;
   setStatus('저장 중…', 'busy');
   saveQueue = saveQueue.then(() => setDoc(
@@ -2125,6 +2308,7 @@ function save() {
     setStatus('저장 오류: ' + err.message, 'err');
     console.error(err);
   });
+  return true;
 }
 
 /* ============================================================
@@ -2881,6 +3065,7 @@ function renderAdmin() {
   $('changePinBtn').classList.toggle('hidden', !isAdminUnlocked);
   if ($('childPinsBtn')) $('childPinsBtn').classList.toggle('hidden', !isAdminUnlocked);
   renderNotice();
+  renderBackupList();   /* 💾 백업 복원 카드는 관리자 모드에서만 보여요 */
   if ($('wishList')) renderWishlist();   /* 잠금을 풀면 O / X / ☑️ 버튼이 바로 나타나요 */
   refreshWishHistory();
   if (chatOpen) renderChatMessages(true);
@@ -4915,18 +5100,40 @@ onAuthStateChanged(auth, user => {
     if (chatOpen) closeChat();
     data = fresh();
     chatSeen = 0;
+    /* 🛡️ 로그아웃하면 서버 확인 상태를 처음으로 되돌려요 */
+    serverLoaded = false;
+    serverHadData = false;
+    lastBackupSig = '';
     return;
   }
   setStatus('연결 확인 중', 'busy');
+  serverLoaded = false;
+  serverHadData = false;
+  lastBackupSig = '';
   unsub = onSnapshot(doc(db, 'families', uid, 'shared', 'dashboard'), snap => {
+    const fromCache = !!(snap.metadata && snap.metadata.fromCache);
+    const exists = !!(snap.exists && snap.exists());
+    /* 🛡️ 오프라인·캐시 미스로 온 '빈 스냅샷'은 화면도 저장도 건드리지 않아요.
+       예전에는 이 한 번으로 빈 data 를 save() 해서 가족 기록을 통째로 덮어썼습니다. */
+    if (!exists && fromCache) {
+      setStatus('연결 확인 중… 기록 보호 중', 'busy');
+      return;
+    }
+    /* 서버가 확인해 준 스냅샷(비캐시)이거나, 실제로 문서가 있을 때만 '서버 확인됨' */
+    if (exists || !fromCache) serverLoaded = true;
     data = fresh();
-    if (snap.exists()) data = snap.data() || {};
+    if (exists) data = snap.data() || {};
     normalize();
     renderAll();
     tick();
     scheduleReminders();
     setStatus('모든 기기와 동기화됨', 'ok');
-    if (!snap.exists() || seededTaskAdded) save();
+    if (!dataIsBlank(data)) serverHadData = true;
+    /* 💾 서버에서 확인한 가족 기록은 이 기기에도 최근 5개까지 자동 백업 */
+    if (!fromCache) autoBackup(data);
+    /* 서버에 문서가 없음이 '확인된' 경우에만 처음 만들어요 */
+    if (!exists) save();
+    else if (seededTaskAdded) save();
     resetIdle();
   }, err => {
     setStatus('Firestore 오류: ' + err.message, 'err');
@@ -5004,6 +5211,7 @@ document.addEventListener('click', async e => {
   if (t.id === 'rewardAddBtn') { addReward(); return; }
   if (t.dataset.delReward) { delReward(t.dataset.delReward); return; }
   if (t.id === 'giftOpenBtn') { openPointGift(); return; }
+  if (t.dataset.backupRestore !== undefined) { askRestoreBackup(t.dataset.backupRestore); return; }
   if (t.id === 'ledgerBtn') { openLedger('all'); return; }
   if (t.dataset.ledgerOpen) { openLedger(t.dataset.ledgerOpen); return; }
   if (t.dataset.giftUndoOk) { commitGiftCancel(t.dataset.giftUndoOk); return; }
